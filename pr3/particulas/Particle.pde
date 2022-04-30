@@ -1,4 +1,4 @@
-class Particle  //<>//
+class Particle 
 {
   ParticleSystem _ps;
   int _id;
@@ -9,6 +9,7 @@ class Particle  //<>//
   PVector _f;
   
   float k = 0.1;
+  float ke = 0.8;
 
   float _m;
   float _radius;
@@ -109,25 +110,21 @@ class Particle  //<>//
       if(_id != i){
         Particle p = sistema.get(i);
         
-        PVector dist = new PVector(PVector.sub(p, _s));
-        PVector distValue = dist.mag();
+        PVector dist = PVector.sub(_s, p._s);
+        float distValue = dist.mag();
         PVector normal = dist.copy();
         normal.normalize();
        
-        if(distance < _radius*2)
+        if(distValue < _radius*2)
         {
-          PVector target = PVector.mult(normal, _radius*2);
-          ...
-          float Fmuellex = (targetX - p._s.x) * Ke; //Distancia * constante elástica = fuerza del muelle
-          float Fmuelley = (targetY - p._s.y) * Ke;
+          PVector target = PVector.add(p._s, PVector.mult(normal, _radius*2));
+          
+          PVector Fmuelle = PVector.mult(PVector.sub(target, _s), ke);
          
-          //Nuevas velocidades de salida para ambas partículas: en estas actuará una fuerza del muelle determinada por sus posiciones
-          this._v.x -= Fmuellex;
-          this._v.y -= Fmuelley;
-          p._v.x += Fmuellex;
-          p._v.y += Fmuelley;
+          _v.add(Fmuelle);
         }
       }
+    }
   }
   
   void display() 

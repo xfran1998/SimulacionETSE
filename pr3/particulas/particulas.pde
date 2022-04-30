@@ -19,7 +19,7 @@ int cols = 30;
 //Hash
 HashTable hash;
 
-final float SIM_STEP = 0.01;   // Simulation time-step (s)
+final float SIM_STEP = 0.05;   // Simulation time-step (s)
 float _simTime = 0.0;   // Simulated time (s)
 
 final float Gc = 9.801;   // Gravity constant (m/(s*s))
