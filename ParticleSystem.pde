@@ -25,6 +25,8 @@ class ParticleSystem
         ID++;
       }
     }
+
+    _n = _particles.size();
   }
 
   void addParticle(int id, PVector initPos, PVector initVel, float mass, float radius) 
@@ -59,14 +61,15 @@ class ParticleSystem
   { 
     for(int i = 0; i < _n; i++)
     {
-      Particle p = _particles.get(i);
-      p.planeCollision(planes);
-
+      Particle p = _particles.get(i);      
+  
       // comprobando colisiones entre particulas
       if(computeParticleCollision)
       {
         p.particleCollisionSpringModel(_particles);
       }
+
+      p.planeCollision(planes);
     }
   }
     

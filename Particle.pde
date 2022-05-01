@@ -9,7 +9,7 @@ class Particle  //<>//
   PVector _f;
   ArrayList<PVector> _Fm; // lista de fuerzas de muelle
   
-  float k = 0.9;
+  float k = 0.5f;
 
   float _m;
   float _radius;

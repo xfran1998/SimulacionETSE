@@ -41,7 +41,7 @@ final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
 final int r_part = 50;
-final int n_part = 4it0;
+final int n_part = 40;
 
 void settings()
 {
