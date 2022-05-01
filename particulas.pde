@@ -1,6 +1,7 @@
 // Fluido y Estrructuas de datos
 // Óscar Marín Egea
 // Francisco Sevillano Asensi
+// ---------------------------
 
 enum EstructuraDatos 
 {
