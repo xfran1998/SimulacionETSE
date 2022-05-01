@@ -1,17 +1,17 @@
 class Grid 
 {
   ArrayList<ArrayList<Particle>> _cells;
+  color[] _colors;
   
   int _nRows; 
   int _nCols; 
   int _numCells;
   float _cellSize;
-  color[] _colors;
   
   Grid(int rows, int cols) 
   {
     _cells = new ArrayList<ArrayList<Particle>>();
-    
+
     _nRows = rows;
     _nCols = cols;
     _numCells = _nRows*_nCols;
@@ -23,6 +23,7 @@ class Grid
     {
       ArrayList<Particle> cell = new ArrayList<Particle>();
       _cells.add(cell);
+
       _colors[i] = color(int(random(0,256)), int(random(0,256)), int(random(0,256)), 150);
     }
   }
@@ -46,19 +47,28 @@ class Grid
   ArrayList<Particle> getVecindario(Particle p){
     int celda = getCelda(p._s);
     ArrayList<Particle> vecinos = new ArrayList<Particle>();
-    IntList celdas_vecinas = new IntList();
+    // IntList celdas_vecinas = new IntList();
+
+    int fila = int(celda / _nCols);
+    int columna = celda % _nCols;
     
-    if (!(celda < _nCols)) celdas_vecinas.append(celda-_nCols);  
-    if (!(celda >= (_nRows-1)*_nCols)) celdas_vecinas.append(celda+_nCols); 
-    if (celda%_nCols != 0) celdas_vecinas.append(celda-1);
-    if (celda%_nCols != _nCols-1) celdas_vecinas.append(celda+1);
+    // celda superior
+    if (fila > 0) vecinos.addAll(_cells.get(celda - _nCols));
+    // celda iinferior
+    if (fila < _nRows-1) vecinos.addAll(_cells.get(celda + _nCols));
+    // celda izquierda
+    if (columna > 0) vecinos.addAll(_cells.get(celda-1));
+    // celda derecha
+    if (columna < _nCols-1) vecinos.addAll(_cells.get(celda+1));
+    // misma celda
+    vecinos.addAll(_cells.get(celda));
     
-    for (int i = 0; i < celdas_vecinas.size(); i++){
-      int tam = _cells.get(celdas_vecinas.get(i)).size();
-      for (int j = 0; j < tam; j++){
-        vecinos.add(_cells.get(celdas_vecinas.get(i)).get(j));
-      }
-    }
+    // for (int i = 0; i < celdas_vecinas.size(); i++){
+    //   int tam = _cells.get(celdas_vecinas.get(i)).size();
+    //   for (int j = 0; j < tam; j++){
+    //     vecinos.add(_cells.get(celdas_vecinas.get(i)).get(j));
+    //   }
+    // }
     
     return vecinos;
   }

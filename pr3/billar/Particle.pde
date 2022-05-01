@@ -81,11 +81,7 @@ class Particle  //<>//
         if (abs(dist) < _radius){
           //reposicionamos la particula
           float mover = _radius-abs(dist);
-          _s.add(PVector.mult(N, mover));
-          //modelo basico
-          PVector delta_s = PVector.mult(N, mover);
-          //se le resta en la direccion de la normal
-          _s.sub(delta_s);
+          _s.add(PVector.mult(N, mover));          
           
           //Respuesta a la colision
           float nv = (N.dot(_v));

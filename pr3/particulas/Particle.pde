@@ -59,12 +59,11 @@ class Particle
     for(int i = 0; i < planes.size(); i++)
     {
       PlaneSection p = planes.get(i);
-      PVector N;
       
       if (p.isInside(_s)){
         
         // no necesitamos el lado dado que siempre estaran encerradas en la mesa
-        N = p.getNormal();
+        PVector N = p.getNormal();
         
         PVector _PB = PVector.sub(_s, p.getPoint1());
         float dist = N.dot(_PB);
@@ -72,10 +71,6 @@ class Particle
           //reposicionamos la particula
           float mover = _radius-abs(dist);
           _s.add(PVector.mult(N, mover));
-          //modelo basico
-          PVector delta_s = PVector.mult(N, mover);
-          //se le resta en la direccion de la normal
-          _s.sub(delta_s);
           
           //Respuesta a la colision
           float nv = (N.dot(_v));

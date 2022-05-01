@@ -1,4 +1,4 @@
-class Particle  //<>//
+class Particle 
 {
   ParticleSystem _ps;
   int _id;
@@ -7,9 +7,10 @@ class Particle  //<>//
   PVector _v;
   PVector _a;
   PVector _f;
-  ArrayList<PVector> _Fm; // lista de fuerzas de muelle
   
-  float k = 0.5f;
+  float k = 0.1;
+  float ke = 0.8;
+  ArrayList<Particle> vecinos;
 
   float _m;
   float _radius;
@@ -25,12 +26,10 @@ class Particle  //<>//
     _a = new PVector(0.0, 0.0);
     _f = new PVector(0.0, 0.0);
 
+    vecinos = new ArrayList<Particle>();
     _m = mass;
     _radius = radius;
     _color = color(0, 100, 255, 150);
-
-    // inicializamos la lista de fuerzas de muelle vacia
-    _Fm = new ArrayList<PVector>();
   }
 
   void update() 
@@ -53,15 +52,6 @@ class Particle  //<>//
     // Fueza rozamiento
     PVector Fr = PVector.mult(_v, -k);
     _f.add(Fr);
-
-    // Fuerza de muelle
-    for (int i = 0; i < _Fm.size(); i++)
-    {
-      _f.add(_Fm.get(i));
-    }
-
-    // Borramos la lista de fuerzas de muelle despues de usarlas
-    _Fm.clear();
   }
 
   void planeCollision(ArrayList<PlaneSection> planes)
@@ -69,24 +59,18 @@ class Particle  //<>//
     for(int i = 0; i < planes.size(); i++)
     {
       PlaneSection p = planes.get(i);
-      PVector N;
       
       if (p.isInside(_s)){
         
         // no necesitamos el lado dado que siempre estaran encerradas en la mesa
-        N = p.getNormal();
+        PVector N = p.getNormal();
         
         PVector _PB = PVector.sub(_s, p.getPoint1());
         float dist = N.dot(_PB);
-        
         if (abs(dist) < _radius){
           //reposicionamos la particula
           float mover = _radius-abs(dist);
           _s.add(PVector.mult(N, mover));
-          //modelo basico
-          PVector delta_s = PVector.mult(N, mover);
-          //se le resta en la direccion de la normal
-          _s.sub(delta_s);
           
           //Respuesta a la colision
           float nv = (N.dot(_v));
@@ -100,35 +84,46 @@ class Particle  //<>//
     }
   } 
   
-  void particleCollisionSpringModel(ArrayList<Particle> sistema)
+  void particleCollisionSpringModel()
   { 
+    
     int total = 0;
     
-    for (int i = 0 ; i < sistema.size(); i++)
+    if(type == EstructuraDatos.values()[0])
+    {
+      vecinos = _ps.getParticleArray();
+      print("o");
+    } else if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      vecinos = grid.getVecindario(this);
+      print("x");
+    } else {
+      // HASH
+      vecinos = hash.getVecindario(this);
+      print("i");
+    }
+    
+    total = vecinos.size();
+    print(total + "\n");
+    
+    for (int i = 0 ; i < total; i++)
     {
       // miramos que no se compare consigo misma
       if(_id != i){
-        Particle p = sistema.get(i);
-        PVector dist = p._s.copy();
+        Particle p = vecinos.get(i);
         
-        dist.sub(_s);
+        PVector dist = PVector.sub(_s, p._s);
         float distValue = dist.mag();
         PVector normal = dist.copy();
         normal.normalize();
        
         if(distValue < _radius*2)
         {
-          // collisionan --> FMuelle = -k*x 
-          // k = constante de dureza del muelle
-          // x = vector distancia
-
-          PVector x = PVector.sub(p._s, _s);  // x direccion del muelle
-          float xMag = _radius*2 - x.mag(); // magnitud del muelle
-          x.setMag(xMag); // seteamos la magitud del muelle a x
-          PVector Fm = PVector.mult(x, -k); // sacamos la fuerza del muelle
-
-          // añadimos la fuerza al array de fuerzas de muelle
-          _Fm.add(Fm);
+          PVector target = PVector.add(p._s, PVector.mult(normal, _radius*2));
+          
+          PVector Fmuelle = PVector.mult(PVector.sub(target, _s), ke);
+         
+          _v.add(Fmuelle);
         }
       }
     }
@@ -136,9 +131,8 @@ class Particle  //<>//
   
   void display() 
   {
-    /*** ¡¡Esta función se debe modificar si la simulación necesita conversión entre coordenadas del mundo y coordenadas de pantalla!! ***/
-    
     noStroke();
+    fill(255, 100);
     circle(_s.x, _s.y, 2.0*_radius);
   }
 }

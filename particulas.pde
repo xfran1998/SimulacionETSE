@@ -41,7 +41,7 @@ final int BACKGROUND_COLOR = 5;
 final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
-final int r_part = 50;
+final int r_part = 20;
 final int n_part = 40;
 
 void settings()
@@ -120,6 +120,15 @@ void keyPressed()
       _planes.add(new PlaneSection(padding_puerta, height/2, padding_puerta+padding*2, height/2, false));
       puerta = true;
     }
+  }
+  if (key == 'n') {
+    type = EstructuraDatos.NONE;
+  }
+  if (key == 'g') {
+    type = EstructuraDatos.GRID;
+  }
+  if (key == 'h') {
+    type = EstructuraDatos.HASH;
   }
 }
   

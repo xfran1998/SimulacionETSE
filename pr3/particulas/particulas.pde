@@ -1,6 +1,7 @@
 // Fluido y Estrructuas de datos
 // Óscar Marín Egea
 // Francisco Sevillano Asensi
+// ---------------------------
 
 enum EstructuraDatos 
 {
@@ -40,8 +41,8 @@ final int BACKGROUND_COLOR = 5;
 final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
-final int r_part = 5;
-final int n_part = 123;
+final int r_part = 20;
+final int n_part = 40;
 
 void settings()
 {
@@ -62,7 +63,7 @@ void setup()
 
 void initSimulation()
 {
-  _system = new ParticleSystem(n_part);
+  _system = new ParticleSystem(50);
   _planes = new ArrayList<PlaneSection>();
 
   _planes.add(new PlaneSection(padding*2, padding, width-padding*2, padding, true)); //Arriba
@@ -80,8 +81,7 @@ void initSimulation()
 
 void drawStaticEnvironment()
 {
-  //hacer que se pueda activar y desactivar
-  grid.display();
+  
   
   for(int i = 0; i < _planes.size(); i++)
   {
@@ -121,7 +121,6 @@ void keyPressed()
       puerta = true;
     }
   }
-  
   if (key == 'n') {
     type = EstructuraDatos.NONE;
   }

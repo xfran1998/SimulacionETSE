@@ -10,8 +10,9 @@ class ParticleSystem
   {
     _particles = new ArrayList<Particle>();
     _n = n;
-    _cols = (width-5*padding)/(r_part*2);
-    _rows = n/cols;
+    _cols = ((width-5*padding)/(r_part*2));
+    float sobrante = n%_cols;
+    _rows = n/_cols;
     
     PVector Pos0 = new PVector(2.5*padding, 1.5*padding);
     PVector Vel0 = new PVector(0, 0);
@@ -19,14 +20,19 @@ class ParticleSystem
     //añadir un monton de particulas iniciales
     for (int i = 0; i < _rows; i++){      
       for(int j = 0; j < _cols ; j++){   
-        PVector pos = new PVector(Pos0.x+j*r_part*2+5, Pos0.y+i*r_part*2+5);
+        PVector pos = new PVector(Pos0.x+j*r_part*2, Pos0.y+i*r_part*2);
         
         addParticle(ID, pos, Vel0, 1, r_part);
         ID++;
       }
     }
-
-    _n = _particles.size();
+    if (sobrante > 0){
+      for (int i = 0; i < sobrante; i++){
+        PVector pos = new PVector(Pos0.x+i*r_part*2, Pos0.y+_rows*r_part*2);
+        addParticle(ID, pos, Vel0, 1, r_part);
+        ID++;
+      }
+    }
   }
 
   void addParticle(int id, PVector initPos, PVector initVel, float mass, float radius) 
@@ -61,14 +67,8 @@ class ParticleSystem
   { 
     for(int i = 0; i < _n; i++)
     {
-      Particle p = _particles.get(i);      
-  
-      // comprobando colisiones entre particulas
-      if(computeParticleCollision)
-      {
-        p.particleCollisionSpringModel(_particles);
-      }
-
+      Particle p = _particles.get(i);
+      p.particleCollisionSpringModel();
       p.planeCollision(planes);
     }
   }
