@@ -10,6 +10,7 @@ class Particle
   
   float k = 0.1;
   float ke = 0.8;
+  ArrayList<Particle> vecinos;
 
   float _m;
   float _radius;
@@ -25,6 +26,7 @@ class Particle
     _a = new PVector(0.0, 0.0);
     _f = new PVector(0.0, 0.0);
 
+    vecinos = new ArrayList<Particle>();
     _m = mass;
     _radius = radius;
     _color = color(0, 100, 255, 150);
@@ -66,7 +68,6 @@ class Particle
         
         PVector _PB = PVector.sub(_s, p.getPoint1());
         float dist = N.dot(_PB);
-        print(dist);
         if (abs(dist) < _radius){
           //reposicionamos la particula
           float mover = _radius-abs(dist);
@@ -90,25 +91,31 @@ class Particle
   
   void particleCollisionSpringModel()
   { 
-    ArrayList<Particle> sistema = new ArrayList<Particle>();
+    
     int total = 0;
     
     if(type == EstructuraDatos.values()[0])
     {
-      total = _ps.getNumParticles();
-      sistema = _ps.getParticleArray();
-      
+      vecinos = _ps.getParticleArray();
+      print("o");
     } else if (type == EstructuraDatos.values()[1]) {
-      
+      // GRID
+      vecinos = grid.getVecindario(this);
+      print("x");
     } else {
-      
+      // HASH
+      vecinos = hash.getVecindario(this);
+      print("i");
     }
+    
+    total = vecinos.size();
+    print(total + "\n");
     
     for (int i = 0 ; i < total; i++)
     {
       // miramos que no se compare consigo misma
       if(_id != i){
-        Particle p = sistema.get(i);
+        Particle p = vecinos.get(i);
         
         PVector dist = PVector.sub(_s, p._s);
         float distValue = dist.mag();
@@ -129,9 +136,8 @@ class Particle
   
   void display() 
   {
-    /*** ¡¡Esta función se debe modificar si la simulación necesita conversión entre coordenadas del mundo y coordenadas de pantalla!! ***/
-    
     noStroke();
+    fill(255, 100);
     circle(_s.x, _s.y, 2.0*_radius);
   }
 }

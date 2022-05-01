@@ -10,9 +10,9 @@ class ParticleSystem
   {
     _particles = new ArrayList<Particle>();
     _n = n;
-    float sobrante = n%cols;
-    _cols = (width-5*padding)/(r_part*2);
-    _rows = n/cols;
+    _cols = ((width-5*padding)/(r_part*2));
+    float sobrante = n%_cols;
+    _rows = n/_cols;
     
     PVector Pos0 = new PVector(2.5*padding, 1.5*padding);
     PVector Vel0 = new PVector(0, 0);
@@ -68,8 +68,8 @@ class ParticleSystem
     for(int i = 0; i < _n; i++)
     {
       Particle p = _particles.get(i);
-      p.planeCollision(planes);
       p.particleCollisionSpringModel();
+      p.planeCollision(planes);
     }
   }
     

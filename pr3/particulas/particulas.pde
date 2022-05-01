@@ -41,7 +41,7 @@ final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
 final int r_part = 5;
-final int n_part = 1;
+final int n_part = 123;
 
 void settings()
 {
@@ -62,7 +62,7 @@ void setup()
 
 void initSimulation()
 {
-  _system = new ParticleSystem(100);
+  _system = new ParticleSystem(n_part);
   _planes = new ArrayList<PlaneSection>();
 
   _planes.add(new PlaneSection(padding*2, padding, width-padding*2, padding, true)); //Arriba
@@ -80,7 +80,8 @@ void initSimulation()
 
 void drawStaticEnvironment()
 {
-  
+  //hacer que se pueda activar y desactivar
+  grid.display();
   
   for(int i = 0; i < _planes.size(); i++)
   {
@@ -119,6 +120,16 @@ void keyPressed()
       _planes.add(new PlaneSection(padding_puerta, height/2, padding_puerta+padding*2, height/2, false));
       puerta = true;
     }
+  }
+  
+  if (key == 'n') {
+    type = EstructuraDatos.NONE;
+  }
+  if (key == 'g') {
+    type = EstructuraDatos.GRID;
+  }
+  if (key == 'h') {
+    type = EstructuraDatos.HASH;
   }
 }
   
