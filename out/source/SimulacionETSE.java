@@ -16,7 +16,175 @@ import java.io.IOException;
 public class SimulacionEtse extends PApplet {
 
 
-class Particle  //<>//
+class Grid 
+{
+  ArrayList<ArrayList<Particle>> _cells;
+  int[] _colors;
+  
+  int _nRows; 
+  int _nCols; 
+  int _numCells;
+  float _cellSize;
+  
+  Grid(int rows, int cols) 
+  {
+    _cells = new ArrayList<ArrayList<Particle>>();
+
+    _nRows = rows;
+    _nCols = cols;
+    _numCells = _nRows*_nCols;
+    _cellSize = width/_nRows;
+    
+    _colors = new int[_numCells];
+    
+    for (int i = 0; i < _numCells; i++) 
+    {
+      ArrayList<Particle> cell = new ArrayList<Particle>();
+      _cells.add(cell);
+
+      _colors[i] = color(PApplet.parseInt(random(0,256)), PApplet.parseInt(random(0,256)), PApplet.parseInt(random(0,256)), 150);
+    }
+  }
+
+   public int getCelda(PVector pos)
+  {
+    int celda = 0;
+    int fila = PApplet.parseInt(pos.y / _cellSize);
+    int columna = PApplet.parseInt(pos.x / _cellSize);
+    
+    celda = fila*_nCols + columna;
+    
+    if (celda < 0 || celda >= grid._cells.size())
+    {
+      return 0;
+    }
+    else
+      return celda;
+  }
+  
+   public ArrayList<Particle> getVecindario(Particle p){
+    int celda = getCelda(p._s);
+    ArrayList<Particle> vecinos = new ArrayList<Particle>();
+    // IntList celdas_vecinas = new IntList();
+
+    int fila = PApplet.parseInt(celda / _nCols);
+    int columna = celda % _nCols;
+    
+    // celda superior
+    if (fila > 0) vecinos.addAll(_cells.get(celda - _nCols));
+    // celda iinferior
+    if (fila < _nRows-1) vecinos.addAll(_cells.get(celda + _nCols));
+    // celda izquierda
+    if (columna > 0) vecinos.addAll(_cells.get(celda-1));
+    // celda derecha
+    if (columna < _nCols-1) vecinos.addAll(_cells.get(celda+1));
+    // misma celda
+    vecinos.addAll(_cells.get(celda));
+    
+    // for (int i = 0; i < celdas_vecinas.size(); i++){
+    //   int tam = _cells.get(celdas_vecinas.get(i)).size();
+    //   for (int j = 0; j < tam; j++){
+    //     vecinos.add(_cells.get(celdas_vecinas.get(i)).get(j));
+    //   }
+    // }
+    
+    return vecinos;
+  }
+  
+   public void insert(Particle p){
+    _cells.get(getCelda(p._s)).add(p);
+  }
+  
+   public void restart()
+  {
+    for(int i = 0; i < grid._cells.size(); i++)
+    {
+      _cells.get(i).clear();
+    }
+  }
+  
+   public int getColor(PVector pos){
+    return _colors[getCelda(pos)];
+  }
+
+   public void display()
+  {
+    strokeWeight(1);
+    stroke(250);
+    
+    for(int i = 0; i < _nRows; i++)
+    {
+      line(0, i*_cellSize, width, i*_cellSize); // lineas horizontales
+      line(i*_cellSize, 0, i*_cellSize, height); // lineas verticales
+    }
+  }
+}
+class HashTable 
+{
+  ArrayList<ArrayList<Particle>> _table;
+  
+  int _numCells;
+  float _cellSize;
+  int[] _colors;
+  
+  HashTable(int numCells, float cellSize) 
+  {
+    _table = new ArrayList<ArrayList<Particle>>();
+    
+    _numCells = numCells; 
+    _cellSize = cellSize;
+
+    _colors = new int[_numCells];
+    
+    for (int i = 0; i < _numCells; i++)
+    {
+      ArrayList<Particle> cell = new ArrayList<Particle>();
+      _table.add(cell);
+      _colors[i] = color(PApplet.parseInt(random(0,256)), PApplet.parseInt(random(0,256)), PApplet.parseInt(random(0,256)), 150);
+    }
+  }
+  
+   public void insert(Particle p)
+  {
+    _table.get(hash(p._s)).add(p);
+  }
+  
+   public ArrayList<Particle> getVecindario(Particle p){
+    ArrayList<Particle> vecinos = new ArrayList<Particle>();
+    
+    // Arriba
+    if (p._s.y > _cellSize) vecinos.addAll(_table.get(hash(new PVector(p._s.x, p._s.y-_cellSize))));  
+    // Abajo
+    if (p._s.y < DISPLAY_SIZE_Y-_cellSize) vecinos.addAll(_table.get(hash(new PVector(p._s.x, p._s.y+_cellSize)))); 
+    // Izquierda
+    if (p._s.x > _cellSize) vecinos.addAll(_table.get(hash(new PVector(p._s.x-_cellSize, p._s.y)))); 
+    // Derecha
+    if (p._s.x < DISPLAY_SIZE_X-_cellSize) vecinos.addAll(_table.get(hash(new PVector(p._s.x+_cellSize, p._s.y)))); 
+    // Misma celda
+    vecinos.addAll(_table.get(hash(p._s)));
+    
+    return vecinos;
+  }
+  
+   public void restart()
+  {
+    for(int i = 0; i < _table.size(); i++){
+      _table.get(i).clear();
+    }
+  }
+  
+   public int getColor(PVector pos){
+    return _colors[hash(pos)];
+  }
+
+   public int hash (PVector pos)
+  {
+    int xd = (int)floor((float)pos.x/_cellSize);
+    int yd = (int)floor((float)pos.y/_cellSize);
+    return ((3 * xd + 5 * yd)) % _table.size();
+  }
+}
+class Particle 
 {
   ParticleSystem _ps;
   int _id;
@@ -25,12 +193,15 @@ class Particle  //<>//
   PVector _v;
   PVector _a;
   PVector _f;
+  
+  float k = 0.1f;
+  float ke = 1;
+  float k_pared = 0.5f;
+  ArrayList<Particle> vecinos;
 
   float _m;
   float _radius;
   int _color;
-  
-  final float k = 0.1f;
   
   Particle(ParticleSystem ps, int id, PVector initPos, PVector initVel, float mass, float radius) 
   {
@@ -42,42 +213,32 @@ class Particle  //<>//
     _a = new PVector(0.0f, 0.0f);
     _f = new PVector(0.0f, 0.0f);
 
+    vecinos = new ArrayList<Particle>();
     _m = mass;
     _radius = radius;
-    // siempre 0 de verde para que contrasten con el fondo
-    _color = color(255*id/ps.getNumParticles(), 0, 255-255*id/ps.getNumParticles());
+    _color = color(0, 100, 255, 150);
   }
 
    public void update() 
   {  
     updateForce();
+    
     PVector a = PVector.div(_f, _m);
     _v.add(PVector.mult(a, SIM_STEP));
-    _s.add(PVector.mult(_v, SIM_STEP));
+    _s.add(PVector.mult(_v, SIM_STEP)); 
   }
 
    public void updateForce()
   {  
-    //Rozamiento para que vayan parando
-    PVector FRoz = PVector.mult(_v, -k);
+    _f = new PVector();
     
-    _f = FRoz.copy();
-  }
-
-   public PVector getPos() {
-    return _s;
-  }
-
-   public float getRadius() {
-    return _radius;
-  }
-  
-   public PVector getVel(){
-    return _v;
-  }
-  
-   public void setVel(PVector vel) {
-    _v = vel;
+    // Fuerza del peso
+    PVector Fg = PVector.mult(G, _m);
+    _f.add(Fg);
+    
+    // Fueza rozamiento
+    PVector Fr = PVector.mult(_v, -k);
+    _f.add(Fr);
   }
 
    public void planeCollision(ArrayList<PlaneSection> planes)
@@ -85,88 +246,85 @@ class Particle  //<>//
     for(int i = 0; i < planes.size(); i++)
     {
       PlaneSection p = planes.get(i);
-      PVector N;
       
       if (p.isInside(_s)){
         
         // no necesitamos el lado dado que siempre estaran encerradas en la mesa
-        N = p.getNormal();
-        print(N + "\n");
+        PVector N = p.getNormal();
         
         PVector _PB = PVector.sub(_s, p.getPoint1());
         float dist = N.dot(_PB);
-        
         if (abs(dist) < _radius){
           //reposicionamos la particula
           float mover = _radius-abs(dist);
-          _s.add(PVector.mult(N, mover));          
+          _s.add(PVector.mult(N, mover));
           
           //Respuesta a la colision
           float nv = (N.dot(_v));
           PVector Vn = PVector.mult(N, nv);
           PVector vt = PVector.sub(_v, Vn);
           //le cambiamos la direccion
-          Vn.mult(-1);
+          Vn.mult(-1*k_pared);
           _v = PVector.add(vt, Vn);
         }
       }
     }
   } 
-
-   public void particleCollisionVelocityModel()
+  
+   public void particleCollisionSpringModel()
   {
-    ArrayList<Particle> sistema = _ps.getParticleArray();
+    int total = 0;
     
-    for (int i = 0; i < sistema.size(); i++){
-      // comprobamos que no se comprueba a si misma
-      if (_id != i)
-      {
-        Particle p = sistema.get(i);
+    if(type == EstructuraDatos.values()[0])
+    {
+      vecinos = _ps.getParticleArray();
+    } else if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      vecinos = grid.getVecindario(this);
+    } else {
+      // HASH
+      vecinos = hash.getVecindario(this);
+    }
+    
+    total = vecinos.size();
+    
+    for (int i = 0 ; i < total; i++)
+    {
+      // miramos que no se compare consigo misma
+      if(_id != i){
+        Particle p = vecinos.get(i);
         
-        PVector dist = PVector.sub(p.getPos(), _s);
+        PVector dist = PVector.sub(_s, p._s);
         float distValue = dist.mag();
         PVector normal = dist.copy();
         normal.normalize();
-        
-        if (distValue <= p.getRadius()+_radius){
-          PVector velNorm1 = PVector.mult(normal, PVector.dot(_v, dist)/distValue);
-          PVector velNorm2 = PVector.mult(normal, PVector.dot(p.getVel(), dist)/distValue);
+       
+        if(distValue < _radius*2)
+        {
+          PVector target = PVector.add(p._s, PVector.mult(normal, _radius*2));
           
-          PVector velTang1 = PVector.sub(_v, velNorm1);
-          PVector velTang2 = PVector.sub(p.getVel(), velNorm2);
-          
-          // restitucion
-          float L = (p.getRadius()+_radius - distValue);
-          
-          float v_rel = PVector.sub(velNorm1, velNorm2).mag();
-          _s.add(PVector.mult(velNorm1, -L/v_rel));
-          p._s.add(PVector.mult(velNorm2, L/v_rel));
-          
-          //velocidades de salida
-          float u1 = PVector.dot(velNorm1, dist)/distValue;
-          float u2 = PVector.dot(velNorm2, dist)/distValue;
-          
-          float v1 = ((_m-_m)*u1+2*_m*u2)/(_m+_m);
-          velNorm1 = PVector.mult(normal, v1);
-          
-          float v2 = ((_m - _m)*u2 + 2*_m*u1) / (_m+_m);
-          velNorm2 = PVector.mult(normal, v2);
-          
-          _v = PVector.add(velNorm1.mult(0.5f), velTang1);
-          //p._v = PVector.add(velNorm2.mult(0.5), velTang2);
+          PVector Fmuelle = PVector.mult(PVector.sub(target, _s), ke);
+         
+          _v.add(Fmuelle);
         }
       }
     }
   }
   
-   public void particleCollisionSpringModel()
-  { 
-  }
-  
    public void display() 
   {
     noStroke();
-    fill(_color);
+    if(type == EstructuraDatos.values()[0])
+    {
+      fill(255, 100);
+    } else if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      fill(grid.getColor(_s));
+    } else {
+      // HASH
+      fill(hash.getColor(_s));
+    }
+    
     circle(_s.x, _s.y, 2.0f*_radius);
   }
 }
@@ -174,33 +332,41 @@ class ParticleSystem
 {
   ArrayList<Particle> _particles;
   int _n;
-  int _r;
-  float _m;
+  int _cols;
+  int _rows;
   
-  // ... (G, Kd, Ke, Cr, etc.)
-  // ...
-  // ...
 
-  ParticleSystem(int n, int r, float m)  
+  ParticleSystem(int n)  
   {
     _particles = new ArrayList<Particle>();
     _n = n;
-    _r = r;
-    _m = m;
+    _cols = ((width-5*padding)/(r_part*2));
+    float sobrante = n%_cols;
+    _rows = n/_cols;
     
-    // crear las bolas
-    for(int i = 0; i < n; i++)
-    {
-      // velocidad inicial
-      PVector Vel0 = new PVector(0,0);
-      // posicion inicial
-      PVector Pos0 = new PVector(random(padding+_r, padding+ancho-_r), random(altura+_r, altura+alto-_r));
-      addParticle(i, Pos0, Vel0, m, r);
+    PVector Pos0 = new PVector(2.5f*padding, 1.5f*padding);
+    PVector Vel0 = new PVector(0, 0);
+    int ID = 0;
+    //añadir un monton de particulas iniciales
+    for (int i = 0; i < _rows; i++){      
+      for(int j = 0; j < _cols ; j++){   
+        PVector pos = new PVector(Pos0.x+j*r_part*2, Pos0.y+i*r_part*2);
+        
+        addParticle(ID, pos, Vel0, m_part, r_part);
+        ID++;
+      }
+    }
+    if (sobrante > 0){
+      for (int i = 0; i < sobrante; i++){
+        PVector pos = new PVector(Pos0.x+i*r_part*2, Pos0.y+_rows*r_part*2);
+        addParticle(ID, pos, Vel0, 10, r_part);
+        ID++;
+      }
     }
   }
 
    public void addParticle(int id, PVector initPos, PVector initVel, float mass, float radius) 
-  {
+  { 
     _particles.add(new Particle(this, id, initPos, initVel, mass, radius));
   }
   
@@ -220,19 +386,51 @@ class ParticleSystem
 
    public void run() 
   {
+    if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      grid.restart();
+    } else if (type == EstructuraDatos.values()[2]) {
+      // HASH
+      hash.restart();
+    }
+    
     for (int i = _n - 1; i >= 0; i--) 
     {
       Particle p = _particles.get(i);
+
+      if (isOutside(p)){
+        _particles.remove(i);
+        _n--;
+          
+        continue;
+      }
+      
+      if (type == EstructuraDatos.values()[1]) {
+        // GRID
+        grid.insert(p);
+      } else if (type == EstructuraDatos.values()[2]) {
+        // HASH
+        hash.insert(p);
+      }
+
       p.update();
     }
   }
   
+   public Boolean isOutside(Particle p)
+  {
+    if (p._s.x < 0 || p._s.y <0 || p._s.y > height || p._s.x > width)
+      return true;
+
+    return false;
+  }
+
    public void computeCollisions(ArrayList<PlaneSection> planes, boolean computeParticleCollision) 
   { 
     for(int i = 0; i < _n; i++)
     {
       Particle p = _particles.get(i);
-      p.particleCollisionVelocityModel();
+      p.particleCollisionSpringModel();
       p.planeCollision(planes);
     }
   }
@@ -253,7 +451,8 @@ class PlaneSection
   PVector _normal;
   float[] _coefs = new float[4];
   
-  
+  PVector P1;
+  PVector P2;
   
   // Constructor to make a plane from two points (assuming Z = 0)
   // The two points define the edges of the finite plane section
@@ -264,6 +463,28 @@ class PlaneSection
     
     setCoefficients();
     calculateNormal(invert);
+    
+    P1 = new PVector(0,0);
+    P2 = new PVector(0,0);
+
+    // P1.y = (A.y >= B.y) ? A.y : B.y;
+    // P1.x = (A.x <= B.x) ? A.x : B.x;
+
+    if (_pos1.y <= _pos2.y){
+      P1.y = _pos1.y;
+      P2.y = _pos2.y;
+    } else {
+      P1.y = _pos2.y;
+      P2.y = _pos1.y;
+    }
+
+    if (_pos1.x <= _pos2.x){
+      P1.x = _pos1.x;
+      P2.x = _pos2.x;
+    } else {
+      P1.x = _pos2.x;
+      P2.x = _pos1.x;
+    }
   } 
   
    public PVector getPoint1()
@@ -278,29 +499,25 @@ class PlaneSection
   
   public Boolean isInside(PVector c){
     /*
-    if(c.x-R_bolas < padding || c.x+R_bolas > padding+ancho || c.y+R_bolas < altura || c.y-R_bolas > altura+alto)
+    if (c.x > _pos2.x && c.x < _pos1.x && c.y < _pos2.y && c.y > _pos1.y)
       return true;
       
-    return false;
+    if (c.x > _pos1.x && c.x < _pos2.x && c.y > _pos1.y && c.y < _pos2.y)
+      return true;
     */
-
+    
+    if (c.x > P1.x && c.y > P1.y && c.x < P2.x && c.y < P2.y) return true;
+    
     if (_pos1.x == _pos2.x) // VERTICAL
     {
-      if(abs(c.x-_pos1.x) < R_bolas*3)
+      if(abs(c.x-_pos1.x) < r_part*3)
         return true;
     } else { // HORIZONTAL
-      if(abs(c.y-_pos1.y) < R_bolas*3)
+      if(abs(c.y-_pos1.y) < r_part*3)
         return true;
     } 
     
     return false;
-    
-    /*
-    if (c.x > _pos1.x && c.x < _pos2.x && c.y > _pos1.y && c.y < _pos2.y)
-      return true;
-      
-    return false;
-    */
   }
   
    public void setCoefficients()
@@ -338,7 +555,7 @@ class PlaneSection
   {
     /*** ¡¡Esta función se debe modificar si la simulación necesita conversión entre coordenadas del mundo y coordenadas de pantalla!! ***/
     
-    stroke(0, 0, 0);
+    stroke(200);
     strokeWeight(5);
     
     // Plane representation:
@@ -351,13 +568,33 @@ class PlaneSection
     line(cx, cy, cx + 5.0f*_normal.x, cy + 5.0f*_normal.y);    
   }
 } 
-// Billar Francés
-// Oscar Marin Egea
+
+// Fluido y Estrructuas de datos
+// Óscar Marín Egea
 // Francisco Sevillano Asensi
 
+enum EstructuraDatos 
+{
+  NONE,
+  GRID,
+  HASH
+}
 
-final float SIM_STEP = 0.01f;   // Simulation time-step (s)
+EstructuraDatos type = EstructuraDatos.NONE;
+
+// Grid
+Grid grid;
+int rows = 30;
+int cols = 30;
+
+//Hash
+HashTable hash;
+
+final float SIM_STEP = 0.05f;   // Simulation time-step (s)
 float _simTime = 0.0f;   // Simulated time (s)
+
+final float Gc = 9.801f;   // Gravity constant (m/(s*s))
+final PVector G = new PVector(0.0f, Gc);   // Acceleration due to gravity (m/(s*s))
 
 ParticleSystem _system;   // Particle system
 ArrayList<PlaneSection> _planes;    // Planes representing the limits
@@ -367,23 +604,18 @@ boolean _computePlaneCollisions = true;
 
 final boolean FULL_SCREEN = false;
 final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
-int DISPLAY_SIZE_X = 1000;   // Display width (pixels)
-int DISPLAY_SIZE_Y = 1000;   // Display height (pixels)
-final int BACKGROUND_COLOR = 50;
-final int POOL_COLOR = color(44,130,87);
+int DISPLAY_SIZE_X = 1500;   // Display width (pixels)
+int DISPLAY_SIZE_Y = 1500;   // Display height (pixels)
+final int BACKGROUND_COLOR = 5;
 
-final float padding = 200;
-final float proporcion = 1.78f;
-final float ancho = DISPLAY_SIZE_X-padding*2;
-final float alto = ancho/proporcion;
-final float altura = (DISPLAY_SIZE_Y/2)-(alto/2);
+final int padding = 100;
+final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
+Boolean puerta = true;
+final int r_part = 10;
+final int n_part = 100;
+final float m_part = 10;
 
-final int N_bolas = 5;
-final int R_bolas = 10;
-final float M_bolas = 1;
-
-int target = -1;
-PVector targetVel = new PVector(0,0);
+Boolean shower = false;
 
  public void settings()
 {
@@ -399,48 +631,35 @@ PVector targetVel = new PVector(0,0);
 
  public void setup()
 {
-  // ...
-  // ...
-  // ...
-  
   initSimulation();
 }
 
  public void initSimulation()
 {
-  _system = new ParticleSystem(N_bolas, R_bolas, M_bolas);
+  _system = new ParticleSystem(n_part);
   _planes = new ArrayList<PlaneSection>();
 
-  // crear los bordes
-  _planes.add(new PlaneSection(padding, altura, padding+ancho, altura, true)); // ARRIBA
-  _planes.add(new PlaneSection(padding, altura+alto, padding+ancho, altura+alto, false)); // ABAJO
-  _planes.add(new PlaneSection(padding, altura, padding, altura+alto, false)); // IZQUIERDA
-  _planes.add(new PlaneSection(padding+ancho, altura, padding+ancho, altura+alto, true)); // DERECHA
+  _planes.add(new PlaneSection(padding*2, padding, width-padding*2, padding, true)); //Arriba
+  _planes.add(new PlaneSection(padding*2, padding, padding, padding*3,false)); //Izquierda 1
+  _planes.add(new PlaneSection(padding, padding*3, padding_puerta, height/2, false)); //Izquierda 2
+  _planes.add(new PlaneSection(width-padding*2, padding, width-padding, padding*3,true)); //Derecha 1
+  _planes.add(new PlaneSection(width-padding, padding*3, width-padding_puerta, height/2, true)); //Derecha 2
+  
+  _planes.add(new PlaneSection(padding_puerta, height/2, padding_puerta+padding*2, height/2, false)); //Puerta
+  
+  
+  grid = new Grid(rows, cols); 
+  hash = new HashTable(_system.getNumParticles()*2, width/rows);
 }
 
  public void drawStaticEnvironment()
 {
-  fill(POOL_COLOR);
-  rect(padding,altura, ancho, alto);
+  //hacer que se pueda activar y desactivar
+  grid.display();
   
-  //dibujar los bordes
   for(int i = 0; i < _planes.size(); i++)
   {
-    _planes.get(i).draw();
-  }
-  
-  if (target >= 0)
-  {
-    Particle p = _system.getParticleArray().get(target);
-    stroke(255);
-    line(p.getPos().x, p.getPos().y, p.getPos().x+targetVel.x, p.getPos().y+targetVel.y);
-    PVector arrow = targetVel.copy();
-    arrow.normalize().mult(10);
-    arrow.rotate(radians(45));
-    line(p.getPos().x+targetVel.x, p.getPos().y+targetVel.y, p.getPos().x+targetVel.x-arrow.x, p.getPos().y+targetVel.y-arrow.y);
-    arrow.rotate(radians(-90));
-    line(p.getPos().x+targetVel.x, p.getPos().y+targetVel.y, p.getPos().x+targetVel.x-arrow.x, p.getPos().y+targetVel.y-arrow.y);
-    
+      _planes.get(i).draw();
   }
 }
 
@@ -450,57 +669,59 @@ PVector targetVel = new PVector(0,0);
   
   drawStaticEnvironment();
     
+  if (shower) {
+    for (int i = 0; i < 5; i++){
+      _system.addParticle(_system._n, new PVector(mouseX+random(-1,1), mouseY+random(-1,1)), new PVector(), m_part, r_part);
+      _system._n++;
+    }
+  }
   _system.run();
   _system.computeCollisions(_planes, _computePlaneCollisions);  
   _system.display();  
 
   _simTime += SIM_STEP;
-
-  // ...
-  // ...
-  // ...
 }
 
- public void mouseClicked() 
-{
-  ArrayList<Particle> pa = _system.getParticleArray();
-  
-  if (target < 0)
-  {
-    for(int i = 0; i < pa.size(); i++)
-    {
-      Particle p = pa.get(i);
-      
-      if (PVector.sub(p.getPos(), new PVector(mouseX, mouseY)).mag() < p.getRadius())
-      {
-        print("entra");
-        target = i;
-      }
-    }
-  } else {
-    Particle p = pa.get(target);
-    
-    p.setVel(targetVel);
-    
-    target = -1;
-  }
-}
-
- public void mouseMoved() 
-{
-  if (target >= 0)
-  {
-    Particle p = _system.getParticleArray().get(target);
-    targetVel = PVector.sub(p.getPos(), new PVector(mouseX, mouseY));
-  }
-}
 
  public void keyPressed()
 {
+  if (key == 'a')
+  {
+    if (puerta)
+    {
+      _planes.remove(5);
+      puerta = false;
+    }
+    else
+    {
+      _planes.add(new PlaneSection(padding_puerta, height/2, padding_puerta+padding*2, height/2, false));
+      puerta = true;
+    }
+  }
+  
+  if (key == 'n') {
+    type = EstructuraDatos.NONE;
+  }
+  if (key == 'g') {
+    type = EstructuraDatos.GRID;
+  }
+  if (key == 'h') {
+    type = EstructuraDatos.HASH;
+  }
 }
   
  public void stop()
 {
+}
+
+ public void mousePressed()
+{
+  shower = true;
+}
+
+ public void mouseReleased()
+{
+  shower = false;
 }
 
 

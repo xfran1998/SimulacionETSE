@@ -1,7 +1,7 @@
+```
 // Fluido y Estrructuas de datos
 // Óscar Marín Egea
 // Francisco Sevillano Asensi
-// ---------------------------
 
 enum EstructuraDatos 
 {
@@ -41,8 +41,11 @@ final int BACKGROUND_COLOR = 5;
 final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
-final int r_part = 20;
-final int n_part = 40;
+final int r_part = 10;
+final int n_part = 100;
+final float m_part = 10;
+
+Boolean shower = false;
 
 void settings()
 {
@@ -63,7 +66,7 @@ void setup()
 
 void initSimulation()
 {
-  _system = new ParticleSystem(50);
+  _system = new ParticleSystem(n_part);
   _planes = new ArrayList<PlaneSection>();
 
   _planes.add(new PlaneSection(padding*2, padding, width-padding*2, padding, true)); //Arriba
@@ -81,12 +84,19 @@ void initSimulation()
 
 void drawStaticEnvironment()
 {
-  
+  //hacer que se pueda activar y desactivar
+  grid.display();
   
   for(int i = 0; i < _planes.size(); i++)
   {
       _planes.get(i).draw();
   }
+
+  drawInfo();
+}
+
+void drawInfo(){
+
 }
 
 void draw() 
@@ -95,6 +105,12 @@ void draw()
   
   drawStaticEnvironment();
     
+  if (shower) {
+    for (int i = 0; i < 5; i++){
+      _system.addParticle(_system._n, new PVector(mouseX+random(-1,1), mouseY+random(-1,1)), new PVector(), m_part, r_part);
+      _system._n++;
+    }
+  }
   _system.run();
   _system.computeCollisions(_planes, _computePlaneCollisions);  
   _system.display();  
@@ -102,9 +118,6 @@ void draw()
   _simTime += SIM_STEP;
 }
 
-void mouseClicked() 
-{
-}
 
 void keyPressed()
 {
@@ -121,6 +134,7 @@ void keyPressed()
       puerta = true;
     }
   }
+  
   if (key == 'n') {
     type = EstructuraDatos.NONE;
   }
@@ -134,4 +148,14 @@ void keyPressed()
   
 void stop()
 {
+}
+
+void mousePressed()
+{
+  shower = true;
+}
+
+void mouseReleased()
+{
+  shower = false;
 }

@@ -9,7 +9,8 @@ class Particle
   PVector _f;
   
   float k = 0.1;
-  float ke = 0.8;
+  float ke = 0.5;
+  float k_pared = 0.5;
   ArrayList<Particle> vecinos;
 
   float _m;
@@ -77,7 +78,7 @@ class Particle
           PVector Vn = PVector.mult(N, nv);
           PVector vt = PVector.sub(_v, Vn);
           //le cambiamos la direccion
-          Vn.mult(-1);
+          Vn.mult(-1*k_pared);
           _v = PVector.add(vt, Vn);
         }
       }
@@ -85,26 +86,21 @@ class Particle
   } 
   
   void particleCollisionSpringModel()
-  { 
-    
+  {
     int total = 0;
     
     if(type == EstructuraDatos.values()[0])
     {
       vecinos = _ps.getParticleArray();
-      print("o");
     } else if (type == EstructuraDatos.values()[1]) {
       // GRID
       vecinos = grid.getVecindario(this);
-      print("x");
     } else {
       // HASH
       vecinos = hash.getVecindario(this);
-      print("i");
     }
     
     total = vecinos.size();
-    print(total + "\n");
     
     for (int i = 0 ; i < total; i++)
     {
@@ -132,7 +128,17 @@ class Particle
   void display() 
   {
     noStroke();
-    fill(255, 100);
+    if(type == EstructuraDatos.values()[0])
+    {
+      fill(255, 100);
+    } else if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      fill(grid.getColor(_s));
+    } else {
+      // HASH
+      fill(hash.getColor(_s));
+    }
+    
     circle(_s.x, _s.y, 2.0*_radius);
   }
 }

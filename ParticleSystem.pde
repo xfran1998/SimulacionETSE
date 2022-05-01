@@ -22,14 +22,14 @@ class ParticleSystem
       for(int j = 0; j < _cols ; j++){   
         PVector pos = new PVector(Pos0.x+j*r_part*2, Pos0.y+i*r_part*2);
         
-        addParticle(ID, pos, Vel0, 1, r_part);
+        addParticle(ID, pos, Vel0, m_part, r_part);
         ID++;
       }
     }
     if (sobrante > 0){
       for (int i = 0; i < sobrante; i++){
         PVector pos = new PVector(Pos0.x+i*r_part*2, Pos0.y+_rows*r_part*2);
-        addParticle(ID, pos, Vel0, 1, r_part);
+        addParticle(ID, pos, Vel0, 10, r_part);
         ID++;
       }
     }
@@ -56,13 +56,45 @@ class ParticleSystem
 
   void run() 
   {
+    if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      grid.restart();
+    } else if (type == EstructuraDatos.values()[2]) {
+      // HASH
+      hash.restart();
+    }
+    
     for (int i = _n - 1; i >= 0; i--) 
     {
       Particle p = _particles.get(i);
+
+      if (isOutside(p)){
+        _particles.remove(i);
+        _n--;
+          
+        continue;
+      }
+      
+      if (type == EstructuraDatos.values()[1]) {
+        // GRID
+        grid.insert(p);
+      } else if (type == EstructuraDatos.values()[2]) {
+        // HASH
+        hash.insert(p);
+      }
+
       p.update();
     }
   }
   
+  Boolean isOutside(Particle p)
+  {
+    if (p._s.x < 0 || p._s.y <0 || p._s.y > height || p._s.x > width)
+      return true;
+
+    return false;
+  }
+
   void computeCollisions(ArrayList<PlaneSection> planes, boolean computeParticleCollision) 
   { 
     for(int i = 0; i < _n; i++)
