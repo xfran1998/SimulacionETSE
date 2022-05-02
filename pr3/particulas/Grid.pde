@@ -73,8 +73,8 @@ class Grid
     return vecinos;
   }
   
-  void insert(Particle p, int celda){
-    _cells.get(celda).add(p);
+  void insert(Particle p){
+    _cells.get(getCelda(p._s)).add(p);
   }
   
   void restart()
@@ -85,6 +85,10 @@ class Grid
     }
   }
   
+  color getColor(PVector pos){
+    return _colors[getCelda(pos)];
+  }
+
   void display()
   {
     strokeWeight(1);

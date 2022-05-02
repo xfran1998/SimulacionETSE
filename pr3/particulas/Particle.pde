@@ -7,9 +7,7 @@ class Particle
   PVector _v;
   PVector _a;
   PVector _f;
-  
-  float k = 0.1;
-  float ke = 0.8;
+
   ArrayList<Particle> vecinos;
 
   float _m;
@@ -27,7 +25,7 @@ class Particle
     _f = new PVector(0.0, 0.0);
 
     vecinos = new ArrayList<Particle>();
-    _m = mass;
+    //_m = mass; comentado para facilidad a la hora de trannsformar en gas
     _radius = radius;
     _color = color(0, 100, 255, 150);
   }
@@ -36,7 +34,7 @@ class Particle
   {  
     updateForce();
     
-    PVector a = PVector.div(_f, _m);
+    PVector a = PVector.div(_f, m_part);
     _v.add(PVector.mult(a, SIM_STEP));
     _s.add(PVector.mult(_v, SIM_STEP)); 
   }
@@ -46,7 +44,7 @@ class Particle
     _f = new PVector();
     
     // Fuerza del peso
-    PVector Fg = PVector.mult(G, _m);
+    PVector Fg = PVector.mult(G, m_part);
     _f.add(Fg);
     
     // Fueza rozamiento
@@ -77,7 +75,7 @@ class Particle
           PVector Vn = PVector.mult(N, nv);
           PVector vt = PVector.sub(_v, Vn);
           //le cambiamos la direccion
-          Vn.mult(-1);
+          Vn.mult(-1*k_pared);
           _v = PVector.add(vt, Vn);
         }
       }
@@ -85,26 +83,21 @@ class Particle
   } 
   
   void particleCollisionSpringModel()
-  { 
-    
+  {
     int total = 0;
     
     if(type == EstructuraDatos.values()[0])
     {
       vecinos = _ps.getParticleArray();
-      print("o");
     } else if (type == EstructuraDatos.values()[1]) {
       // GRID
       vecinos = grid.getVecindario(this);
-      print("x");
     } else {
       // HASH
       vecinos = hash.getVecindario(this);
-      print("i");
     }
     
     total = vecinos.size();
-    print(total + "\n");
     
     for (int i = 0 ; i < total; i++)
     {
@@ -117,12 +110,11 @@ class Particle
         PVector normal = dist.copy();
         normal.normalize();
        
-        if(distValue < _radius*2)
+
+        if(distValue < L)
         {
-          PVector target = PVector.add(p._s, PVector.mult(normal, _radius*2));
-          
-          PVector Fmuelle = PVector.mult(PVector.sub(target, _s), ke);
-         
+          PVector Fmuelle = PVector.mult(normal, (L-distValue)*ke);
+
           _v.add(Fmuelle);
         }
       }
@@ -132,7 +124,17 @@ class Particle
   void display() 
   {
     noStroke();
-    fill(255, 100);
+    if(type == EstructuraDatos.values()[0])
+    {
+      fill(255, 100);
+    } else if (type == EstructuraDatos.values()[1]) {
+      // GRID
+      fill(grid.getColor(_s));
+    } else {
+      // HASH
+      fill(hash.getColor(_s));
+    }
+    
     circle(_s.x, _s.y, 2.0*_radius);
   }
 }
