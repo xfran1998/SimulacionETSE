@@ -56,6 +56,17 @@ class ParticleSystem
 
   void run() 
   {
+    time_estructuras = millis();
+    actualizarEstructura();
+    time_estructuras = millis() - time_estructuras;
+
+    time_integracion = millis();
+    updateParticles();
+    time_integracion = millis() - time_integracion;
+  }
+  
+  void actualizarEstructura()
+  {
     if (type == EstructuraDatos.values()[1]) {
       // GRID
       grid.restart();
@@ -82,11 +93,20 @@ class ParticleSystem
         // HASH
         hash.insert(p);
       }
+      
+      //p.update(); 
+    }
+  }
 
+  void updateParticles()
+  {
+    for (int i = _n - 1; i >= 0; i--) 
+    {
+      Particle p = _particles.get(i);
       p.update();
     }
   }
-  
+
   Boolean isOutside(Particle p)
   {
     if (p._s.x < 0 || p._s.y <0 || p._s.y > height || p._s.x > width)

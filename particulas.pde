@@ -42,8 +42,15 @@ float _simTime = 0.0;   // Simulated time (s)
 float _elapsedTime = 0.0;   // Elapsed (real) time (s)
 final float SIM_STEP = 0.05;   // Simulation step (s)
 
+// for printing
+float time_colisiones = 0.0;
+float time_estructuras = 0.0;
+float time_integracion = 0.0;
+float time_draw_scene = 0.0;
+
 // Display values:
 
+String modelo_liquido = "GAS";
 final boolean FULL_SCREEN = false;
 final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
 int DISPLAY_SIZE_X = 1500;   // Display width (pixels)
@@ -54,7 +61,7 @@ final int padding = 100;
 final int padding_puerta = (DISPLAY_SIZE_X/2)-padding;
 Boolean puerta = true;
 final int r_part = 5;
-final int n_part = 1000;
+final int n_part = 400;
 float m_part = 0.05;
 float k = 0.4;
 float ke = 1;
@@ -100,7 +107,7 @@ void initSimulation()
   grid = new Grid(rows, cols); 
   hash = new HashTable(_system.getNumParticles()*2, width/rows);
   _output = createWriter("data.csv");
-  _output.println("tiempo,paso,framerate,n_part");
+  _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
 }
 
 void drawStaticEnvironment()
@@ -113,9 +120,9 @@ void drawStaticEnvironment()
       _planes.get(i).draw();
   }
 
-  drawInfo();
   printInfo();
 }
+
 
 void drawInfo(){
   float padding = 40;
@@ -133,8 +140,24 @@ void drawInfo(){
   text("Num particle = " + _system._n, init_width, init_height+padding*2);
   // ms
   text("Delta time = " + _deltaTimeDraw + " ms", init_width, init_height+padding*3);
+  // tiempo de colisiones
+  text("Time colisiones = " + time_colisiones + " ms", init_width, init_height+padding*4);
+  // tiempo de estructuras
+  text("Time estructuras = " + time_estructuras + " ms", init_width, init_height+padding*5);
+  // tiempo de integracion
+  text("Time integracion = " + time_integracion + " ms", init_width, init_height+padding*6);
+  // tiempo de draw
+  text("Time draw = " + time_draw_scene + " ms", init_width, init_height+padding*7);
+  
+  // Display Actual Estructura (medio pantalla)
+  textSize(60);
+  fill(0, 408, 612);
+  text("Estruct: " + type, width/2-150, height/2+100);
+  text("Tipo: " + modelo_liquido, width/2-150, height/2+180);
 
-  // comandos de funcionamiento
+  // Comandos de funcionamiento
+  textSize(40);
+  fill(0, 408, 612);
   // Cambiar Fluidos (1, 2 y 3)
   // 1-GAS
   text("1 - GAS", init_width2, init_height+padding*0);
@@ -157,7 +180,9 @@ void drawInfo(){
 
 void printInfo(){
   // framerate y numero de particulas por iteracion
-  _output.println(_simTime + "," + SIM_STEP + "," + 1.0/_deltaTimeDraw + "," +_system._n);
+  float time_woutDraw = time_colisiones+time_integracion;
+  float time_withDraw = time_woutDraw+time_draw_scene;
+  _output.println(_simTime + "," + SIM_STEP + "," + 1.0/_deltaTimeDraw + "," +_system._n + "," + time_woutDraw + "," + time_withDraw);
 }
 
 void draw() 
@@ -168,8 +193,6 @@ void draw()
   _deltaTimeDraw = (now - _lastTimeDraw)/1000.0;
   _elapsedTime += _deltaTimeDraw;
   _lastTimeDraw = now;  
-  
-  drawStaticEnvironment();
     
   if (shower) {
     for (int i = 0; i < 5; i++){
@@ -178,13 +201,22 @@ void draw()
     }
   }
 
-  float principio = millis();
-  _system.run();
+  // collision detection
+  time_colisiones = millis();
   _system.computeCollisions(_planes, _computePlaneCollisions);  
-  float fin = millis();
+  time_colisiones = millis() - time_colisiones;
 
+  _system.run();
+
+  // draw 
+  time_draw_scene = millis();
+  drawStaticEnvironment();
   _system.display();  
-
+  time_draw_scene = millis() - time_draw_scene;
+  
+  // Drawing info separated from the scene
+  drawInfo();
+  
   _simTime += SIM_STEP;
   frame++;
 }
@@ -223,20 +255,23 @@ void keyPressed()
     ke = 0.7;
     k_pared = 0.1;
     k = 0.4;
+    modelo_liquido = "GAS";
   }
   if (key == '2') {
     // Liquido
     m_part = 10;
-    L = r_part;
-    ke = 0.8;
-    k_pared = 0.3;
+    L = r_part*2;
+    ke = 25;
+    k_pared = 0.5;
+    modelo_liquido = "LÍQUIDO";
   }
   if (key == '3') {
     // Viscoso
-    m_part = 1;
+    m_part = 20;
     L = r_part;
-    ke = 1;
-    k_pared = 0.1;
+    ke = 10;
+    k_pared = 0.3;
+    modelo_liquido = "VISCOSO";
   }
 }
   

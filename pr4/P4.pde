@@ -41,7 +41,7 @@ SpringLayout NET_SPRING_LAYOUT;   // Current spring layout
 
 final PVector BALL_START_POS = new PVector(0.0, 0.0, -200.0);   // Initial position of the sphere (m)
 PVector BALL_START_VEL = new PVector(0.0, 0.0, -100.0);   // Initial velocity of the sphere (m/s)
-final float BALL_MASS = 100;   // Mass of the sphere (kg)
+final float BALL_MASS = 10;   // Mass of the sphere (kg)
 final float BALL_RADIUS = 50.0;   // Radius of the sphere (m)
 
 final float COLLISION_KE = 150.0;   // Ellastic constant of the collision springs (N/m) 
