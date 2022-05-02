@@ -65,22 +65,15 @@ public class DeformableSurface
      switch(_springLayout)
      {
        case STRUCTURAL:
-         for (int i = 0; i < _numNodesY; i++){
-           for (int j = 0; j < _numNodesX; j++){
-             if (j < _numNodesX-1)
-               _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j+1][i], Ke, Kd, false, maxForce, breakLengthFactor));
-             if (i < _numNodesY-1)
-               _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j][i+1], Ke, Kd, false, maxForce, breakLengthFactor));
-           }
-         }
+          createStruct(Ke, Kd, maxForce, breakLengthFactor);
        break;
        
        case SHEAR:
-       
+          createShear(Ke, Kd, maxForce, breakLengthFactor);
        break;
        
        case STRUCTURAL_AND_SHEAR:
-       
+          createStructShear(Ke, Kd, maxForce, breakLengthFactor);
        break;
        
        case STRUCTURAL_AND_BEND:
@@ -113,6 +106,47 @@ public class DeformableSurface
       s.update(simStep);
       s.applyForces();
     }
+  }
+
+  void createStruct(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+    for (int i = 0; i < _numNodesY; i++){
+      for (int j = 0; j < _numNodesX; j++){
+        if (j < _numNodesX-1)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j+1][i], Ke, Kd, false, maxForce, breakLengthFactor));
+        if (i < _numNodesY-1)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j][i+1], Ke, Kd, false, maxForce, breakLengthFactor));
+      }
+    }
+  }
+
+  void createShear(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+    for (int i = 0; i < _numNodesY-1; i++){
+      for (int j = 0; j < _numNodesX; j++){
+        if (j != 0)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j-1][i+1], Ke, Kd, false, maxForce, breakLengthFactor));
+        if (j != _numNodesX-1)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j+1][i+1], Ke, Kd, false, maxForce, breakLengthFactor));
+      }
+    }
+  }
+
+  void createBend(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+
+  }
+
+  void createStructShear(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+    createStruct(Ke, Kd, maxForce, breakLengthFactor);
+    createShear(Ke, Kd, maxForce, breakLengthFactor);
+  }
+
+  void createStructBend(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+    createStruct(Ke, Kd, maxForce, breakLengthFactor);
+    createBend(Ke, Kd, maxForce, breakLengthFactor);
   }
 
   void avoidCollision(Ball b, float Ke, float Kd, float maxForce, float breakLengthFactor)
