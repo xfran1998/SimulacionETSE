@@ -54,7 +54,7 @@ String modelo_liquido = "GAS";
 final boolean FULL_SCREEN = false;
 final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
 int DISPLAY_SIZE_X = 1500;   // Display width (pixels)
-int DISPLAY_SIZE_Y = 1500;   // Display height (pixels)
+int DISPLAY_SIZE_Y = 1080;   // Display height (pixels)
 final int BACKGROUND_COLOR = 5;
 
 final int padding = 100;
@@ -103,9 +103,13 @@ void initSimulation()
   
   _planes.add(new PlaneSection(padding_puerta, height/2, padding_puerta+padding*2, height/2, false)); //Puerta
   
+  _elapsedTime = 0.0;
+  _simTime = 0.0;
   
   grid = new Grid(rows, cols); 
   hash = new HashTable(_system.getNumParticles()*2, width/rows);
+
+  transformLiquid();
   _output = createWriter("data.csv");
   _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
 }
@@ -119,8 +123,6 @@ void drawStaticEnvironment()
   {
       _planes.get(i).draw();
   }
-
-  printInfo();
 }
 
 
@@ -182,7 +184,7 @@ void printInfo(){
   // framerate y numero de particulas por iteracion
   float time_woutDraw = time_colisiones+time_integracion;
   float time_withDraw = time_woutDraw+time_draw_scene;
-  _output.println(_simTime + "," + SIM_STEP + "," + 1.0/_deltaTimeDraw + "," +_system._n + "," + time_woutDraw + "," + time_withDraw);
+  _output.println(_elapsedTime + "," + SIM_STEP + "," + 1.0/_deltaTimeDraw + "," +_system._n + "," + time_woutDraw + "," + time_withDraw);
 }
 
 void draw() 
@@ -195,7 +197,7 @@ void draw()
   _lastTimeDraw = now;  
     
   if (shower) {
-    for (int i = 0; i < 5; i++){
+    for (int i = 0; i < 20; i++){
       _system.addParticle(_system._n, new PVector(mouseX+random(-1,1), mouseY+random(-1,1)), new PVector(), m_part, r_part);
       _system._n++;
     }
@@ -216,6 +218,7 @@ void draw()
   
   // Drawing info separated from the scene
   drawInfo();
+  printInfo();
   
   _simTime += SIM_STEP;
   frame++;
@@ -249,34 +252,59 @@ void keyPressed()
 
   // Cambiar comportamiento particulas
   if (key == '1') {
-    // Gaseoso
-    m_part = 0.02;
-    L = r_part;
-    ke = 0.7;
-    k_pared = 0.1;
-    k = 0.4;
-    modelo_liquido = "GAS";
+    transformGas();
   }
   if (key == '2') {
-    // Liquido
-    m_part = 10;
-    L = r_part*2;
-    ke = 25;
-    k_pared = 0.5;
-    modelo_liquido = "LÍQUIDO";
+    transformLiquid();
   }
   if (key == '3') {
-    // Viscoso
-    m_part = 20;
-    L = r_part;
-    ke = 10;
-    k_pared = 0.3;
-    modelo_liquido = "VISCOSO";
+      transformViscoso();
+  }
+
+  if (key == 'r'){
+    restart();
   }
 }
-  
+
+void transformGas()
+{
+  // Gaseoso
+  m_part = 0.02;
+  L = r_part;
+  ke = 0.7;
+  k_pared = 0.1;
+  k = 0.4;
+  modelo_liquido = "GAS";
+}
+
+void transformLiquid()
+{
+  // Liquido
+  m_part = 10;
+  L = r_part*2;
+  ke = 25;
+  k_pared = 0.5;
+  modelo_liquido = "LÍQUIDO";
+}
+
+void transformViscoso()
+{
+  // Viscoso
+  m_part = 20;
+  L = r_part;
+  ke = 10;
+  k_pared = 0.3;
+  modelo_liquido = "VISCOSO";
+}
+
 void stop()
 {
+  // No hace nada ;P
+}
+
+void restart()
+{
+  initSimulation();
 }
 
 void mousePressed()
