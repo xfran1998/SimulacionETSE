@@ -108,7 +108,7 @@ void initSimulation()
   
   grid = new Grid(rows, cols); 
   hash = new HashTable(_system.getNumParticles()*2, width/rows);
-
+  type = EstructuraDatos.HASH;
   transformLiquid();
   _output = createWriter("data.csv");
   _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
@@ -258,7 +258,7 @@ void keyPressed()
     transformLiquid();
   }
   if (key == '3') {
-      transformViscoso();
+    transformViscoso();
   }
 
   if (key == 'r'){
