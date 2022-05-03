@@ -3,12 +3,17 @@
 // Francisco Sevillano Asensi
 
 
-final float SIM_STEP = 0.01;   // Simulation time-step (s)
+final float SIM_STEP = 0.05;   // Simulation time-step (s)
 float _simTime = 0.0;   // Simulated time (s)
+float _deltaTimeDraw = 0.0;   // Time since last draw (s)
+float _lastTimeDraw = 0.0;   // Last draw time (s)
+float _elapsedTime = 0.0;   // Elapsed time since simulation start (s)
 
 ParticleSystem _system;   // Particle system
 ArrayList<PlaneSection> _planes;    // Planes representing the limits
-boolean _computePlaneCollisions = true;
+boolean _computeParticleCollisions = true;
+
+PrintWriter _output;
 
 // Display values:
 
@@ -25,9 +30,12 @@ final float ancho = DISPLAY_SIZE_X-padding*2;
 final float alto = ancho/proporcion;
 final float altura = (DISPLAY_SIZE_Y/2)-(alto/2);
 
-final int N_bolas = 5;
+final PVector Fg = new PVector(10,10);
+Boolean gravedad;
+
 final int R_bolas = 10;
 final float M_bolas = 1;
+int N_bolas = 100;
 
 int target = -1;
 PVector targetVel = new PVector(0,0);
@@ -46,10 +54,8 @@ void settings()
 
 void setup()
 {
-  // ...
-  // ...
-  // ...
-  
+  _output = createWriter("data.csv");
+  _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
   initSimulation();
 }
 
@@ -63,6 +69,11 @@ void initSimulation()
   _planes.add(new PlaneSection(padding, altura+alto, padding+ancho, altura+alto, false)); // ABAJO
   _planes.add(new PlaneSection(padding, altura, padding, altura+alto, false)); // IZQUIERDA
   _planes.add(new PlaneSection(padding+ancho, altura, padding+ancho, altura+alto, true)); // DERECHA
+
+  _simTime = 0.0;
+  _elapsedTime = 0.0;
+  _lastTimeDraw = millis();
+  gravedad = false;
 }
 
 void drawStaticEnvironment()
@@ -89,23 +100,63 @@ void drawStaticEnvironment()
     line(p.getPos().x+targetVel.x, p.getPos().y+targetVel.y, p.getPos().x+targetVel.x-arrow.x, p.getPos().y+targetVel.y-arrow.y);
     
   }
+  
+  drawInfo();
+}
+
+void drawInfo(){
+  float padding = 40;
+  float init_height = height * 0.8;
+  float init_width = width * 0.035;
+  float init_width2 = width * 0.7;
+  // info por pantalla
+  // fps
+  textSize(20);
+  fill(0, 408, 612);
+  text("Frame rate = " + 1.0/_deltaTimeDraw + " fps", init_width, init_height);
+  // simulated time
+  text("Simulated time = " + _simTime + " s ", init_width, init_height+padding*1);
+  // numero de particulas
+  text("Num particle = " + _system._n, init_width, init_height+padding*2);
+  // tiempo de dibujado
+  text("Draw time = " + _deltaTimeDraw + " ms ", init_width, init_height+padding*3);
+  
+  // Display Actual Estructura (medio pantalla)
+  textSize(30);
+  fill(0, 408, 612);
+  text("Pulsa en una bola para disparar", width/2-220, height/2+200);
+
+  // Comandos de funcionamiento
+  textSize(20);
+  fill(0, 408, 612);
+  // Velocidades aleatorias para las particulas
+  text("m - Velocidades aleatorias", init_width2, init_height+padding*0);
+  // Alterar las coliisiones de las particulas
+  text("c - Alternar colisiones", init_width2, init_height+padding*1);
+  // Reiniciar la simulacion
+  text("r - Resetear simulacion", init_width2, init_height+padding*2);
+}
+
+void printInfo(){
+  _output.println(_elapsedTime + "," + SIM_STEP + "," + 1.0/_deltaTimeDraw + "," +_system._n);
 }
 
 void draw() 
 {
   background(BACKGROUND_COLOR);
+  int now = millis();
+  _deltaTimeDraw = (now - _lastTimeDraw)/1000.0;
+  _elapsedTime += _deltaTimeDraw;
+  _lastTimeDraw = now; 
   
   drawStaticEnvironment();
     
   _system.run();
-  _system.computeCollisions(_planes, _computePlaneCollisions);  
+  _system.computeCollisions(_planes, _computeParticleCollisions);  
   _system.display();  
 
   _simTime += SIM_STEP;
-
-  // ...
-  // ...
-  // ...
+  printInfo();
 }
 
 void mouseClicked() 
@@ -120,7 +171,6 @@ void mouseClicked()
       
       if (PVector.sub(p.getPos(), new PVector(mouseX, mouseY)).mag() < p.getRadius())
       {
-        print("entra");
         target = i;
       }
     }
@@ -144,6 +194,27 @@ void mouseMoved()
 
 void keyPressed()
 {
+  if (key == 'm'){
+    //velocidades aleatorias
+    _system.velocidadesRand();
+  }
+  if (key == 'c'){
+    //no colision entre particulas
+    _computeParticleCollisions = !_computeParticleCollisions;
+  }
+  if (key == 'r'){
+    //resetear simulacion
+    initSimulation();
+  }
+  if (key == 'g'){
+    //alterarnar gravedad
+    gravedad = !gravedad;
+  }
+  if (key == 'e'){
+    _output.flush(); // Writes the remaining data to the file 
+    _output.close(); // Finishes the file 
+    exit(); // Stops the program 
+  }
 }
   
 void stop()

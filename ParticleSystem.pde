@@ -2,41 +2,33 @@ class ParticleSystem
 {
   ArrayList<Particle> _particles;
   int _n;
-  int _cols;
-  int _rows;
+  int _r;
+  float _m;
   
+  // ... (G, Kd, Ke, Cr, etc.)
+  // ...
+  // ...
 
-  ParticleSystem(int n)  
+  ParticleSystem(int n, int r, float m)  
   {
     _particles = new ArrayList<Particle>();
     _n = n;
-    _cols = ((width-5*padding)/(r_part*2));
-    float sobrante = n%_cols;
-    _rows = n/_cols;
+    _r = r;
+    _m = m;_elapsedTime = 0.0;
     
-    PVector Pos0 = new PVector(2.5*padding, 1.5*padding);
-    PVector Vel0 = new PVector(0, 0);
-    int ID = 0;
-    //añadir un monton de particulas iniciales
-    for (int i = 0; i < _rows; i++){      
-      for(int j = 0; j < _cols ; j++){   
-        PVector pos = new PVector(Pos0.x+j*r_part*2, Pos0.y+i*r_part*2);
-        
-        addParticle(ID, pos, Vel0, m_part, r_part);
-        ID++;
-      }
-    }
-    if (sobrante > 0){
-      for (int i = 0; i < sobrante; i++){
-        PVector pos = new PVector(Pos0.x+i*r_part*2, Pos0.y+_rows*r_part*2);
-        addParticle(ID, pos, Vel0, 10, r_part);
-        ID++;
-      }
+    // crear las bolas
+    for(int i = 0; i < n; i++)
+    {
+      // velocidad inicial
+      PVector Vel0 = new PVector(0,0);
+      // posicion inicial
+      PVector Pos0 = new PVector(random(padding+_r, padding+ancho-_r), random(altura+_r, altura+alto-_r));
+      addParticle(i, Pos0, Vel0, m, r);
     }
   }
 
   void addParticle(int id, PVector initPos, PVector initVel, float mass, float radius) 
-  { 
+  {
     _particles.add(new Particle(this, id, initPos, initVel, mass, radius));
   }
   
@@ -56,72 +48,31 @@ class ParticleSystem
 
   void run() 
   {
-    time_estructuras = millis();
-    actualizarEstructura();
-    time_estructuras = millis() - time_estructuras;
-
-    time_integracion = millis();
-    updateParticles();
-    time_integracion = millis() - time_integracion;
-  }
-  
-  void actualizarEstructura()
-  {
-    if (type == EstructuraDatos.values()[1]) {
-      // GRID
-      grid.restart();
-    } else if (type == EstructuraDatos.values()[2]) {
-      // HASH
-      hash.restart();
-    }
-    
-    for (int i = _n - 1; i >= 0; i--) 
-    {
-      Particle p = _particles.get(i);
-
-      if (isOutside(p)){
-        _particles.remove(i);
-        _n--;
-          
-        continue;
-      }
-      
-      if (type == EstructuraDatos.values()[1]) {
-        // GRID
-        grid.insert(p);
-      } else if (type == EstructuraDatos.values()[2]) {
-        // HASH
-        hash.insert(p);
-      }
-      
-      //p.update(); 
-    }
-  }
-
-  void updateParticles()
-  {
     for (int i = _n - 1; i >= 0; i--) 
     {
       Particle p = _particles.get(i);
       p.update();
     }
   }
-
-  Boolean isOutside(Particle p)
-  {
-    if (p._s.x < 0 || p._s.y <0 || p._s.y > height || p._s.x > width)
-      return true;
-
-    return false;
-  }
-
+  
   void computeCollisions(ArrayList<PlaneSection> planes, boolean computeParticleCollision) 
   { 
     for(int i = 0; i < _n; i++)
     {
       Particle p = _particles.get(i);
-      p.particleCollisionSpringModel();
+      if (computeParticleCollision){
+        p.particleCollisionVelocityModel();
+      }
       p.planeCollision(planes);
+    }
+  }
+
+  void velocidadesRand(){
+    for(int i = 0; i < _n; i++)
+    {
+      Particle p = _particles.get(i);
+      PVector v = new PVector(random(-40,40), random(-40,40));
+      p.setVel(v);
     }
   }
     

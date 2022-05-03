@@ -5,7 +5,8 @@ class PlaneSection
   PVector _normal;
   float[] _coefs = new float[4];
   
-  
+  PVector P1;
+  PVector P2;
   
   // Constructor to make a plane from two points (assuming Z = 0)
   // The two points define the edges of the finite plane section
@@ -16,6 +17,28 @@ class PlaneSection
     
     setCoefficients();
     calculateNormal(invert);
+    
+    P1 = new PVector(0,0);
+    P2 = new PVector(0,0);
+
+    // P1.y = (A.y >= B.y) ? A.y : B.y;
+    // P1.x = (A.x <= B.x) ? A.x : B.x;
+
+    if (_pos1.y <= _pos2.y){
+      P1.y = _pos1.y;
+      P2.y = _pos2.y;
+    } else {
+      P1.y = _pos2.y;
+      P2.y = _pos1.y;
+    }
+
+    if (_pos1.x <= _pos2.x){
+      P1.x = _pos1.x;
+      P2.x = _pos2.x;
+    } else {
+      P1.x = _pos2.x;
+      P2.x = _pos1.x;
+    }
   } 
   
   PVector getPoint1()
@@ -30,29 +53,25 @@ class PlaneSection
   
   public Boolean isInside(PVector c){
     /*
-    if(c.x-R_bolas < padding || c.x+R_bolas > padding+ancho || c.y+R_bolas < altura || c.y-R_bolas > altura+alto)
+    if (c.x > _pos2.x && c.x < _pos1.x && c.y < _pos2.y && c.y > _pos1.y)
       return true;
       
-    return false;
+    if (c.x > _pos1.x && c.x < _pos2.x && c.y > _pos1.y && c.y < _pos2.y)
+      return true;
     */
-
+    
+    if (c.x > P1.x && c.y > P1.y && c.x < P2.x && c.y < P2.y) return true;
+    
     if (_pos1.x == _pos2.x) // VERTICAL
     {
-      if(abs(c.x-_pos1.x) < R_bolas*3)
+      if(abs(c.x-_pos1.x) < r_part*3)
         return true;
     } else { // HORIZONTAL
-      if(abs(c.y-_pos1.y) < R_bolas*3)
+      if(abs(c.y-_pos1.y) < r_part*3)
         return true;
     } 
     
     return false;
-    
-    /*
-    if (c.x > _pos1.x && c.x < _pos2.x && c.y > _pos1.y && c.y < _pos2.y)
-      return true;
-      
-    return false;
-    */
   }
   
   void setCoefficients()
@@ -90,7 +109,7 @@ class PlaneSection
   {
     /*** ¡¡Esta función se debe modificar si la simulación necesita conversión entre coordenadas del mundo y coordenadas de pantalla!! ***/
     
-    stroke(0, 0, 0);
+    stroke(200);
     strokeWeight(5);
     
     // Plane representation:

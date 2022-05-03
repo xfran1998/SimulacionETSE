@@ -1,4 +1,4 @@
-class Particle 
+class Particle  //<>//
 {
   ParticleSystem _ps;
   int _id;
@@ -8,11 +8,11 @@ class Particle
   PVector _a;
   PVector _f;
 
-  ArrayList<Particle> vecinos;
-
   float _m;
   float _radius;
   color _color;
+  
+  final float k = 0.1;
   
   Particle(ParticleSystem ps, int id, PVector initPos, PVector initVel, float mass, float radius) 
   {
@@ -24,34 +24,45 @@ class Particle
     _a = new PVector(0.0, 0.0);
     _f = new PVector(0.0, 0.0);
 
-    vecinos = new ArrayList<Particle>();
-    //_m = mass; comentado para facilidad a la hora de trannsformar en gas
+    _m = mass;
     _radius = radius;
-    _color = color(0, 100, 255, 150);
+    // siempre 0 de verde para que contrasten con el fondo
+    _color = color(255*id/ps.getNumParticles(), 0, 255-255*id/ps.getNumParticles());
   }
 
   void update() 
   {  
     updateForce();
-    integrarPosicion();
-  }
-
-  void integrarPosicion() 
-  {
-    PVector a = PVector.div(_f, m_part);
+    PVector a = PVector.div(_f, _m);
     _v.add(PVector.mult(a, SIM_STEP));
-    _s.add(PVector.mult(_v, SIM_STEP)); 
+    _s.add(PVector.mult(_v, SIM_STEP));
   }
 
   void updateForce()
   {  
-    // Fuerza del peso
-    PVector Fg = PVector.mult(G, m_part);
-    _f.add(Fg);
+    //Rozamiento para que vayan parando
+    PVector FRoz = PVector.mult(_v, -k);
     
-    // Fueza rozamiento
-    PVector Fr = PVector.mult(_v, -k);
-    _f.add(Fr);
+    _f = FRoz.copy();
+
+    if (gravedad)
+      _f.add(Fg);
+  }
+
+  PVector getPos() {
+    return _s;
+  }
+
+  float getRadius() {
+    return _radius;
+  }
+  
+  PVector getVel(){
+    return _v;
+  }
+  
+  void setVel(PVector vel) {
+    _v = vel;
   }
 
   void planeCollision(ArrayList<PlaneSection> planes)
@@ -59,65 +70,75 @@ class Particle
     for(int i = 0; i < planes.size(); i++)
     {
       PlaneSection p = planes.get(i);
+      PVector N;
       
       if (p.isInside(_s)){
         
         // no necesitamos el lado dado que siempre estaran encerradas en la mesa
-        PVector N = p.getNormal();
+        N = p.getNormal();
         
         PVector _PB = PVector.sub(_s, p.getPoint1());
         float dist = N.dot(_PB);
+        
         if (abs(dist) < _radius){
           //reposicionamos la particula
           float mover = _radius-abs(dist);
-          _s.add(PVector.mult(N, mover));
+          _s.add(PVector.mult(N, mover));          
           
           //Respuesta a la colision
           float nv = (N.dot(_v));
           PVector Vn = PVector.mult(N, nv);
           PVector vt = PVector.sub(_v, Vn);
           //le cambiamos la direccion
-          Vn.mult(-1*k_pared);
+          Vn.mult(-1);
           _v = PVector.add(vt, Vn);
         }
       }
     }
   } 
-  
-  void particleCollisionSpringModel()
+
+  void particleCollisionVelocityModel()
   {
-    int total = 0;
-    _f = new PVector();
+    ArrayList<Particle> sistema = _ps.getParticleArray();
     
-    if(type == EstructuraDatos.values()[0])
-    {
-      vecinos = _ps.getParticleArray();
-    } else if (type == EstructuraDatos.values()[1]) {
-      // GRID
-      vecinos = grid.getVecindario(this);
-    } else {
-      // HASH
-      vecinos = hash.getVecindario(this);
-    }
-    
-    total = vecinos.size();
-    
-    for (int i = 0 ; i < total; i++)
-    {
-      // miramos que no se compare consigo misma
-      if(_id != i){
-        Particle p = vecinos.get(i);
+    for (int i = 0; i < sistema.size(); i++){
+      // comprobamos que no se comprueba a si misma
+      if (_id != i)
+      {
+        Particle p = sistema.get(i);
         
-        PVector dist = PVector.sub(_s, p._s);
+        PVector dist = PVector.sub(p.getPos(), _s);
         float distValue = dist.mag();
         PVector normal = dist.copy();
         normal.normalize();
-       
+        
+        if (distValue < p.getRadius()+_radius){ //deteccion
 
-        if(distValue < L)
-        {
-          PVector Fmuelle = PVector.mult(normal, (L-distValue)*ke);
-          _f.add(Fmuelle);
+          // respuesta
+          PVector velNorm1 = PVector.mult(normal, PVector.dot(_v, normal));
+          PVector velNorm2 = PVector.mult(normal, PVector.dot(p.getVel(), normal));
+
+          PVector velTang1 = PVector.sub(_v, velNorm1);
+          PVector velTang2 = PVector.sub(p.getVel(), velNorm2);
+          
+          //p._s.add(PVector.mult(velNorm2, L/v_rel));
+          //float v_rel = PVector.sub(velNorm1, velNorm2).mag();
+          // restitucion
+          float L = (p.getRadius()+_radius - distValue);
+          _s.add(PVector.mult(normal, -L));
+          
+          //velocidades de salida
+          float u1 = PVector.dot(velNorm1, dist)/distValue;
+          float u2 = PVector.dot(velNorm2, dist)/distValue;
+          
+          float v1 = ((_m-_m)*u1+2*_m*u2)/(_m+_m);
+          velNorm1 = PVector.mult(normal, v1);
+          
+          float v2 = ((_m - _m)*u2 + 2*_m*u1) / (_m+_m);
+          velNorm2 = PVector.mult(normal, v2);
+          
+          _v = PVector.add(velNorm1.mult(0.5), velTang1);
+          p._v = PVector.add(velNorm2.mult(0.5), velTang2);
         }
       }
     }
@@ -126,17 +147,7 @@ class Particle
   void display() 
   {
     noStroke();
-    if(type == EstructuraDatos.values()[0])
-    {
-      fill(255, 100);
-    } else if (type == EstructuraDatos.values()[1]) {
-      // GRID
-      fill(grid.getColor(_s));
-    } else {
-      // HASH
-      fill(hash.getColor(_s));
-    }
-    
+    fill(_color);
     circle(_s.x, _s.y, 2.0*_radius);
   }
 }
