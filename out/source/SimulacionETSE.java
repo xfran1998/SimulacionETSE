@@ -111,7 +111,7 @@ final float SIM_STEP = 0.1f;   // Simulation step (s)
   _numParticles = 0;
 
   _output = createWriter("data.csv");
-  _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
+  _output.println("tiempo,paso,n_part");
 }
 
  public void printInfo()
@@ -171,7 +171,7 @@ final float SIM_STEP = 0.1f;   // Simulation step (s)
   //tiempo _elapsedTime
   //numero de particulas
   //deltaTimeDraw
-  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + "," + _numParticles);
+  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + _numParticles);
 }
 
  public void keyPressed()
