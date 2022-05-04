@@ -264,6 +264,12 @@ void keyPressed()
   if (key == 'r'){
     restart();
   }
+
+  if (key == 'e'){
+    _output.flush(); // Writes the remaining data to the file 
+    _output.close(); // Finishes the file 
+    exit(); // Stops the program 
+  }
 }
 
 void transformGas()

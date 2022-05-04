@@ -37,7 +37,7 @@ public class Rocket
   PVector createVelocityRand(float ang, float k, int m, int n){
     float vel = (cos(((2*asin(k))+(PI*m))/(2*n)))/(cos(((2*asin(k*cos(n*ang)))+(PI*m))/(2*n)));
     PVector v = new PVector(cos(ang), sin(ang));
-    v.setMag(vel*500);
+    v.setMag(vel*50);
     return v;
   }
   

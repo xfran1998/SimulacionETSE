@@ -26,6 +26,7 @@ Boolean windMoving = false;
 
 // Display values:
 
+PrintWriter _output;
 final boolean FULL_SCREEN = false;
 final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
 int DISPLAY_SIZE_X = 1000;   // Display width (pixels)
@@ -38,7 +39,7 @@ int _lastTimeDraw = 0;   // Last measure of time in draw() function (ms)
 float _deltaTimeDraw = 0.0;   // Time between draw() calls (s)
 float _simTime = 0.0;   // Simulated time (s)
 float _elapsedTime = 0.0;   // Elapsed (real) time (s)
-final float SIM_STEP = 0.02;   // Simulation step (s)
+final float SIM_STEP = 0.1;   // Simulation step (s)
 
 void settings()
 {
@@ -59,6 +60,9 @@ void setup()
 
   _fw = new FireWorks();
   _numParticles = 0;
+
+  _output = createWriter("data.csv");
+  _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
 }
 
 void printInfo()
@@ -99,16 +103,26 @@ void draw()
   _fw.run();
   printInfo();  
   drawWind();
+  printFile();
 }
 
 void mousePressed()
 {
   PVector pos = new PVector(mouseX, mouseY);
-  PVector vel = new PVector((pos.x - width/2), (pos.y - height));
+  PVector vel = new PVector((pos.x - width/2), (pos.y - height)).setMag(200);
   color c = color(random(255),random(255),random(255));
 
   int type = (int)(random(NUM_ROCKET_TYPES)); 
   _fw.addRocket(RocketType.values()[type], new PVector(width/2, height), vel, c);
+}
+
+
+void printFile(){
+  // VARS:
+  //tiempo _elapsedTime
+  //numero de particulas
+  //deltaTimeDraw
+  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + "," + _numParticles);
 }
 
 void keyPressed()
@@ -119,12 +133,18 @@ void keyPressed()
   if (keyCode == BACKSPACE) {
     for (int i = 0; i < 50; i++) {
       PVector pos = new PVector(mouseX+random(0,200), mouseY+random(0,200));
-      PVector vel = new PVector((pos.x - width/2), (pos.y - height));
+      PVector vel = new PVector((pos.x - width/2), (pos.y - height)).setMag(200);
       color c = color(random(255),random(255),random(255));
     
       int type = (int)(random(NUM_ROCKET_TYPES)); 
       _fw.addRocket(RocketType.values()[type], new PVector(width/2, height), vel, c);
     }
+  }
+
+  if (key == 'e'){
+    _output.flush(); // Writes the remaining data to the file 
+    _output.close(); // Finishes the file 
+    exit(); // Stops the program 
   }
 }
 

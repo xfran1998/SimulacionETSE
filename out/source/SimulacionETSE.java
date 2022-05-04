@@ -16,392 +16,79 @@ import java.io.IOException;
 public class SimulacionEtse extends PApplet {
 
 
-class Particle  //<>//
+public class FireWorks 
 {
-  ParticleSystem _ps;
-  int _id;
+  ArrayList<Rocket> _rockets;
 
-  PVector _s;
-  PVector _v;
-  PVector _a;
-  PVector _f;
-
-  float _m;
-  float _radius;
-  int _color;
-  
-  final float k = 0.1f;
-  
-  Particle(ParticleSystem ps, int id, PVector initPos, PVector initVel, float mass, float radius) 
+  FireWorks() 
   {
-    _ps = ps;
-    _id = id;
-
-    _s = initPos.copy();
-    _v = initVel.copy();
-    _a = new PVector(0.0f, 0.0f);
-    _f = new PVector(0.0f, 0.0f);
-
-    _m = mass;
-    _radius = radius;
-    // siempre 0 de verde para que contrasten con el fondo
-    _color = color(255*id/ps.getNumParticles(), 0, 255-255*id/ps.getNumParticles());
-  }
-
-   public void update() 
-  {  
-    updateForce();
-    PVector a = PVector.div(_f, _m);
-    _v.add(PVector.mult(a, SIM_STEP));
-    _s.add(PVector.mult(_v, SIM_STEP));
-  }
-
-   public void updateForce()
-  {  
-    //Rozamiento para que vayan parando
-    PVector FRoz = PVector.mult(_v, -k);
-    
-    _f = FRoz.copy();
-
-    if (gravedad)
-      _f.add(Fg);
-  }
-
-   public PVector getPos() {
-    return _s;
-  }
-
-   public float getRadius() {
-    return _radius;
+    _rockets = new ArrayList<Rocket>();
   }
   
-   public PVector getVel(){
-    return _v;
+   public void addRocket(RocketType type, PVector pos, PVector vel, int c)
+  {
+    // Código para añadir un cohete a la simulación
+    _rockets.add(new Rocket(type, pos, vel, c));
   }
   
-   public void setVel(PVector vel) {
-    _v = vel;
+   public int getNumRockets()
+  {
+    return _rockets.size();
   }
-
-   public void planeCollision(ArrayList<PlaneSection> planes)
-  { 
-    for(int i = 0; i < planes.size(); i++)
+  
+   public void run()
+  {
+    for (int i = 0; i < _rockets.size(); i++)
     {
-      PlaneSection p = planes.get(i);
-      PVector N;
-      
-      if (p.isInside(_s)){
-        
-        // no necesitamos el lado dado que siempre estaran encerradas en la mesa
-        N = p.getNormal();
-        
-        PVector _PB = PVector.sub(_s, p.getPoint1());
-        float dist = N.dot(_PB);
-        
-        if (abs(dist) < _radius){
-          //reposicionamos la particula
-          float mover = _radius-abs(dist);
-          _s.add(PVector.mult(N, mover));          
-          
-          //Respuesta a la colision
-          float nv = (N.dot(_v));
-          PVector Vn = PVector.mult(N, nv);
-          PVector vt = PVector.sub(_v, Vn);
-          //le cambiamos la direccion
-          Vn.mult(-1);
-          _v = PVector.add(vt, Vn);
-        }
-      }
+      Rocket r = _rockets.get(i);
+      r.run();
     }
-  } 
-
-   public void particleCollisionVelocityModel()
-  {
-    ArrayList<Particle> sistema = _ps.getParticleArray();
     
-    for (int i = 0; i < sistema.size(); i++){
-      // comprobamos que no se comprueba a si misma
-      if (_id != i)
-      {
-        Particle p = sistema.get(i);
-        
-        PVector dist = PVector.sub(p.getPos(), _s);
-        float distValue = dist.mag();
-        PVector normal = dist.copy();
-        normal.normalize();
-        
-        if (distValue < p.getRadius()+_radius){ //deteccion
-
-          // respuesta
-          PVector velNorm1 = PVector.mult(normal, PVector.dot(_v, normal));
-          PVector velNorm2 = PVector.mult(normal, PVector.dot(p.getVel(), normal));
-
-          PVector velTang1 = PVector.sub(_v, velNorm1);
-          PVector velTang2 = PVector.sub(p.getVel(), velNorm2);
-          
-          //p._s.add(PVector.mult(velNorm2, L/v_rel));
-          //float v_rel = PVector.sub(velNorm1, velNorm2).mag();
-          // restitucion
-          float L = (p.getRadius()+_radius - distValue);
-          _s.add(PVector.mult(normal, -L));
-          
-          //velocidades de salida
-          float u1 = PVector.dot(velNorm1, dist)/distValue;
-          float u2 = PVector.dot(velNorm2, dist)/distValue;
-          
-          float v1 = ((_m-_m)*u1+2*_m*u2)/(_m+_m);
-          velNorm1 = PVector.mult(normal, v1);
-          
-          float v2 = ((_m - _m)*u2 + 2*_m*u1) / (_m+_m);
-          velNorm2 = PVector.mult(normal, v2);
-          
-          _v = PVector.add(velNorm1.mult(0.5f), velTang1);
-          p._v = PVector.add(velNorm2.mult(0.5f), velTang2);
-        }
-      }
-    }
-  }
-  
-   public void display() 
-  {
-    noStroke();
-    fill(_color);
-    circle(_s.x, _s.y, 2.0f*_radius);
+    _simTime += SIM_STEP;    
   }
 }
-class ParticleSystem 
+enum RocketType 
 {
-  ArrayList<Particle> _particles;
-  int _n;
-  int _r;
-  float _m;
-  
-  // ... (G, Kd, Ke, Cr, etc.)
-  // ...
-  // ...
-
-  ParticleSystem(int n, int r, float m)  
-  {
-    _particles = new ArrayList<Particle>();
-    _n = n;
-    _r = r;
-    _m = m;_elapsedTime = 0.0f;
-    
-    // crear las bolas
-    for(int i = 0; i < n; i++)
-    {
-      // velocidad inicial
-      PVector Vel0 = new PVector(0,0);
-      // posicion inicial
-      PVector Pos0 = new PVector(random(padding+_r, padding+ancho-_r), random(altura+_r, altura+alto-_r));
-      addParticle(i, Pos0, Vel0, m, r);
-    }
-  }
-
-   public void addParticle(int id, PVector initPos, PVector initVel, float mass, float radius) 
-  {
-    _particles.add(new Particle(this, id, initPos, initVel, mass, radius));
-  }
-  
-   public void restart()
-  {
-  }
-  
-   public int getNumParticles()
-  {
-    return _n;
-  }
-  
-   public ArrayList<Particle> getParticleArray()
-  {
-    return _particles;
-  }
-
-   public void run() 
-  {
-    for (int i = _n - 1; i >= 0; i--) 
-    {
-      Particle p = _particles.get(i);
-      p.update();
-    }
-  }
-  
-   public void computeCollisions(ArrayList<PlaneSection> planes, boolean computeParticleCollision) 
-  { 
-    for(int i = 0; i < _n; i++)
-    {
-      Particle p = _particles.get(i);
-      if (computeParticleCollision){
-        p.particleCollisionVelocityModel();
-      }
-      p.planeCollision(planes);
-    }
-  }
-
-   public void velocidadesRand(){
-    for(int i = 0; i < _n; i++)
-    {
-      Particle p = _particles.get(i);
-      PVector v = new PVector(random(-40,40), random(-40,40));
-      p.setVel(v);
-    }
-  }
-    
-   public void display() 
-  {
-    for (int i = _n - 1; i >= 0; i--) 
-    {
-      Particle p = _particles.get(i);      
-      p.display();
-    }    
-  }
+  ALEATORIO
 }
-class PlaneSection 
-{ 
-  PVector _pos1;
-  PVector _pos2;
-  PVector _normal;
-  float[] _coefs = new float[4];
-  
-  
-  
-  // Constructor to make a plane from two points (assuming Z = 0)
-  // The two points define the edges of the finite plane section
-  PlaneSection(float x1, float y1, float x2, float y2, boolean invert) 
-  {
-    _pos1 = new PVector(x1, y1);
-    _pos2 = new PVector(x2, y2);
-    
-    setCoefficients();
-    calculateNormal(invert);
-  } 
-  
-   public PVector getPoint1()
-  {
-    return _pos1;
-  }
- 
-   public PVector getPoint2()
-  {
-    return _pos2;
-  }
-  
-  public Boolean isInside(PVector c){
-    /*
-    if(c.x-R_bolas < padding || c.x+R_bolas > padding+ancho || c.y+R_bolas < altura || c.y-R_bolas > altura+alto)
-      return true;
-      
-    return false;
-    */
 
-    if (_pos1.x == _pos2.x) // VERTICAL
-    {
-      if(abs(c.x-_pos1.x) < R_bolas*3)
-        return true;
-    } else { // HORIZONTAL
-      if(abs(c.y-_pos1.y) < R_bolas*3)
-        return true;
-    } 
-    
-    return false;
-    
-    /*
-    if (c.x > _pos1.x && c.x < _pos2.x && c.y > _pos1.y && c.y < _pos2.y)
-      return true;
-      
-    return false;
-    */
-  }
-  
-   public void setCoefficients()
-  {
-    PVector v = new PVector(_pos2.x - _pos1.x, _pos2.y - _pos1.y, 0.0f);
-    PVector z = new PVector(_pos2.x - _pos1.x, _pos2.y - _pos1.y, 1.0f);
-    
-    _coefs[0] = v.y*z.z - z.y*v.z;
-    _coefs[1] = -(v.x*z.z - z.x*v.z);
-    _coefs[2] = v.x*z.y - z.x*v.y;
-    _coefs[3] = -_coefs[0]*_pos1.x - _coefs[1]*_pos1.y - _coefs[2]*_pos1.z;
-  }
-  
-   public void calculateNormal(boolean inverted)
-  {
-    _normal = new PVector(_coefs[0], _coefs[1], _coefs[2]);
-    _normal.normalize();
-    
-    if (inverted)
-      _normal.mult(-1);
-  }
-  
-   public float getDistance(PVector p)
-  {
-    float d = (_coefs[0]*p.x + _coefs[1]*p.y + _coefs[2]*p.z + _coefs[3]) / (sqrt(_coefs[0]*_coefs[0] + _coefs[1]*_coefs[1] + _coefs[2]*_coefs[2]));
-    return abs(d);
-  }
-  
-   public PVector getNormal()
-  {
-    return _normal;
-  }
+final int NUM_ROCKET_TYPES = RocketType.values().length;
 
-   public void draw() 
-  {
-    /*** ¡¡Esta función se debe modificar si la simulación necesita conversión entre coordenadas del mundo y coordenadas de pantalla!! ***/
-    
-    stroke(0, 0, 0);
-    strokeWeight(5);
-    
-    // Plane representation:
-    line(_pos1.x, _pos1.y, _pos2.x, _pos2.y); 
-    
-    float cx = _pos1.x*0.5f + _pos2.x*0.5f;
-    float cy = _pos1.y*0.5f + _pos2.y*0.5f;
+enum ParticleType 
+{
+  CASING,
+  REGULAR_PARTICLE 
+}
 
-    // Normal vector representation:
-    line(cx, cy, cx + 5.0f*_normal.x, cy + 5.0f*_normal.y);    
-  }
-} 
-// Billar Francés
-// Oscar Marin Egea
-// Francisco Sevillano Asensi
+// Particle control:
 
+FireWorks _fw;   // Main object of the program
+int _numParticles = 0;   // Number of particles of the simulation
 
-final float SIM_STEP = 0.05f;   // Simulation time-step (s)
-float _simTime = 0.0f;   // Simulated time (s)
-float _deltaTimeDraw = 0.0f;   // Time since last draw (s)
-float _lastTimeDraw = 0.0f;   // Last draw time (s)
-float _elapsedTime = 0.0f;   // Elapsed time since simulation start (s)
+// Problem variables:
 
-ParticleSystem _system;   // Particle system
-ArrayList<PlaneSection> _planes;    // Planes representing the limits
-boolean _computeParticleCollisions = true;
-
-PrintWriter _output;
+final float Gc = 9.801f;   // Gravity constant (m/(s*s))
+final PVector G = new PVector(0.0f, Gc);   // Acceleration due to gravity (m/(s*s))
+PVector _windVelocity = new PVector(10.0f, 0.0f);   // Wind velocity (m/s)
+final float WIND_CONSTANT = 1.0f;   // Constant to convert apparent wind speed into wind force (Kg/s)
+Boolean windMoving = false;
 
 // Display values:
 
+PrintWriter _output;
 final boolean FULL_SCREEN = false;
 final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
 int DISPLAY_SIZE_X = 1000;   // Display width (pixels)
 int DISPLAY_SIZE_Y = 1000;   // Display height (pixels)
-final int BACKGROUND_COLOR = 50;
-final int POOL_COLOR = color(44,130,87);
+final int [] BACKGROUND_COLOR = {10, 10, 25};
 
-final float padding = 200;
-final float proporcion = 1.78f;
-final float ancho = DISPLAY_SIZE_X-padding*2;
-final float alto = ancho/proporcion;
-final float altura = (DISPLAY_SIZE_Y/2)-(alto/2);
+// Time control:
 
-final PVector Fg = new PVector(10,10);
-Boolean gravedad;
-
-final int R_bolas = 10;
-final float M_bolas = 1;
-int N_bolas = 100;
-
-int target = -1;
-PVector targetVel = new PVector(0,0);
+int _lastTimeDraw = 0;   // Last measure of time in draw() function (ms)
+float _deltaTimeDraw = 0.0f;   // Time between draw() calls (s)
+float _simTime = 0.0f;   // Simulated time (s)
+float _elapsedTime = 0.0f;   // Elapsed (real) time (s)
+final float SIM_STEP = 0.1f;   // Simulation step (s)
 
  public void settings()
 {
@@ -417,171 +104,311 @@ PVector targetVel = new PVector(0,0);
 
  public void setup()
 {
+  frameRate(DRAW_FREQ);
+  _lastTimeDraw = millis();
+
+  _fw = new FireWorks();
+  _numParticles = 0;
+
   _output = createWriter("data.csv");
   _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
-  initSimulation();
 }
 
- public void initSimulation()
+ public void printInfo()
 {
-  _system = new ParticleSystem(N_bolas, R_bolas, M_bolas);
-  _planes = new ArrayList<PlaneSection>();
-
-  // crear los bordes
-  _planes.add(new PlaneSection(padding, altura, padding+ancho, altura, true)); // ARRIBA
-  _planes.add(new PlaneSection(padding, altura+alto, padding+ancho, altura+alto, false)); // ABAJO
-  _planes.add(new PlaneSection(padding, altura, padding, altura+alto, false)); // IZQUIERDA
-  _planes.add(new PlaneSection(padding+ancho, altura, padding+ancho, altura+alto, true)); // DERECHA
-
-  _simTime = 0.0f;
-  _elapsedTime = 0.0f;
-  _lastTimeDraw = millis();
-  gravedad = false;
+  fill(255);
+  text("Number of particles : " + _numParticles, width*0.025f, height*0.05f);
+  text("Frame rate = " + 1.0f/_deltaTimeDraw + " fps", width*0.025f, height*0.075f);
+  text("Elapsed time = " + _elapsedTime + " s", width*0.025f , height*0.1f);
+  text("Simulated time = " + _simTime + " s ", width*0.025f, height*0.125f);
 }
 
- public void drawStaticEnvironment()
+ public void drawWind()
 {
-  fill(POOL_COLOR);
-  rect(padding,altura, ancho, alto);
-  
-  //dibujar los bordes
-  for(int i = 0; i < _planes.size(); i++)
-  {
-    _planes.get(i).draw();
-  }
-  
-  if (target >= 0)
-  {
-    Particle p = _system.getParticleArray().get(target);
-    stroke(255);
-    line(p.getPos().x, p.getPos().y, p.getPos().x+targetVel.x, p.getPos().y+targetVel.y);
-    PVector arrow = targetVel.copy();
-    arrow.normalize().mult(10);
-    arrow.rotate(radians(45));
-    line(p.getPos().x+targetVel.x, p.getPos().y+targetVel.y, p.getPos().x+targetVel.x-arrow.x, p.getPos().y+targetVel.y-arrow.y);
-    arrow.rotate(radians(-90));
-    line(p.getPos().x+targetVel.x, p.getPos().y+targetVel.y, p.getPos().x+targetVel.x-arrow.x, p.getPos().y+targetVel.y-arrow.y);
-    
-  }
-  
-  drawInfo();
+  // Código para dibujar el vector que representa el viento
+  stroke(255);
+  PVector dir = _windVelocity.copy();
+  dir.normalize();
+  PVector arrow = dir.copy();
+  line(width/2, height/2, (width/2)+_windVelocity.x, (height/2)+_windVelocity.y);
+  arrow.rotate(radians(45));
+  line((width/2)+_windVelocity.x, (height/2)+_windVelocity.y, (width/2)+_windVelocity.x-arrow.x*5, (height/2)+_windVelocity.y-arrow.y*5);
+  arrow.rotate(radians(-90));
+  line((width/2)+_windVelocity.x, (height/2)+_windVelocity.y, (width/2)+_windVelocity.x-arrow.x*5, (height/2)+_windVelocity.y-arrow.y*5);
+  stroke(0);
 }
 
- public void drawInfo(){
-  float padding = 40;
-  float init_height = height * 0.8f;
-  float init_width = width * 0.035f;
-  float init_width2 = width * 0.7f;
-  // info por pantalla
-  // fps
-  textSize(20);
-  fill(0, 408, 612);
-  text("Frame rate = " + 1.0f/_deltaTimeDraw + " fps", init_width, init_height);
-  // simulated time
-  text("Simulated time = " + _simTime + " s ", init_width, init_height+padding*1);
-  // numero de particulas
-  text("Num particle = " + _system._n, init_width, init_height+padding*2);
-  // tiempo de dibujado
-  text("Draw time = " + _deltaTimeDraw + " ms ", init_width, init_height+padding*3);
-  
-  // Display Actual Estructura (medio pantalla)
-  textSize(30);
-  fill(0, 408, 612);
-  text("Pulsa en una bola para disparar", width/2-220, height/2+200);
-
-  // Comandos de funcionamiento
-  textSize(20);
-  fill(0, 408, 612);
-  // Velocidades aleatorias para las particulas
-  text("m - Velocidades aleatorias", init_width2, init_height+padding*0);
-  // Alterar las coliisiones de las particulas
-  text("c - Alternar colisiones", init_width2, init_height+padding*1);
-  // Reiniciar la simulacion
-  text("r - Resetear simulacion", init_width2, init_height+padding*2);
-}
-
- public void printInfo(){
-  _output.println(_elapsedTime + "," + SIM_STEP + "," + 1.0f/_deltaTimeDraw + "," +_system._n);
-}
-
- public void draw() 
+ public void draw()
 {
-  background(BACKGROUND_COLOR);
   int now = millis();
   _deltaTimeDraw = (now - _lastTimeDraw)/1000.0f;
   _elapsedTime += _deltaTimeDraw;
-  _lastTimeDraw = now; 
-  
-  drawStaticEnvironment();
-    
-  _system.run();
-  _system.computeCollisions(_planes, _computeParticleCollisions);  
-  _system.display();  
+  _lastTimeDraw = now;
 
-  _simTime += SIM_STEP;
-  printInfo();
+  //background(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]);
+  fill(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], 50);
+  rect(0, 0, width, height);
+  
+  _fw.run();
+  printInfo();  
+  drawWind();
+  printFile();
 }
 
- public void mouseClicked() 
+ public void mousePressed()
 {
-  ArrayList<Particle> pa = _system.getParticleArray();
-  
-  if (target < 0)
-  {
-    for(int i = 0; i < pa.size(); i++)
-    {
-      Particle p = pa.get(i);
-      
-      if (PVector.sub(p.getPos(), new PVector(mouseX, mouseY)).mag() < p.getRadius())
-      {
-        target = i;
-      }
-    }
-  } else {
-    Particle p = pa.get(target);
-    
-    p.setVel(targetVel);
-    
-    target = -1;
-  }
+  PVector pos = new PVector(mouseX, mouseY);
+  PVector vel = new PVector((pos.x - width/2), (pos.y - height)).setMag(200);
+  int c = color(random(255),random(255),random(255));
+
+  int type = (int)(random(NUM_ROCKET_TYPES)); 
+  _fw.addRocket(RocketType.values()[type], new PVector(width/2, height), vel, c);
 }
 
- public void mouseMoved() 
-{
-  if (target >= 0)
-  {
-    Particle p = _system.getParticleArray().get(target);
-    targetVel = PVector.sub(p.getPos(), new PVector(mouseX, mouseY));
-  }
+
+ public void printFile(){
+  // VARS:
+  //tiempo _elapsedTime
+  //numero de particulas
+  //deltaTimeDraw
+  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + "," + _numParticles);
 }
 
  public void keyPressed()
 {
-  if (key == 'm'){
-    //velocidades aleatorias
-    _system.velocidadesRand();
+  if (keyCode == UP) {
+    windMoving = true;
+  } 
+  if (keyCode == BACKSPACE) {
+    for (int i = 0; i < 50; i++) {
+      PVector pos = new PVector(mouseX+random(0,200), mouseY+random(0,200));
+      PVector vel = new PVector((pos.x - width/2), (pos.y - height)).setMag(200);
+      int c = color(random(255),random(255),random(255));
+    
+      int type = (int)(random(NUM_ROCKET_TYPES)); 
+      _fw.addRocket(RocketType.values()[type], new PVector(width/2, height), vel, c);
+    }
   }
-  if (key == 'c'){
-    //no colision entre particulas
-    _computeParticleCollisions = !_computeParticleCollisions;
-  }
-  if (key == 'r'){
-    //resetear simulacion
-    initSimulation();
-  }
-  if (key == 'g'){
-    //alterarnar gravedad
-    gravedad = !gravedad;
-  }
+
   if (key == 'e'){
     _output.flush(); // Writes the remaining data to the file 
     _output.close(); // Finishes the file 
     exit(); // Stops the program 
   }
 }
-  
- public void stop()
+
+ public void mouseMoved()
 {
+    if (windMoving) {
+      PVector dir = new PVector(mouseX-(width/2), mouseY-(height/2));
+      _windVelocity = dir.copy();
+    } 
+}
+
+ public void keyReleased()
+{
+  windMoving = false;
+}
+public class Particle 
+{
+  ParticleType _type;
+
+  PVector _s;   // Position (m)
+  PVector _v;   // Velocity (m/s)
+  PVector _a;   // Acceleration (m/(s*s))
+  PVector _F;   // Force (N)
+  float _m;   // Mass (kg)
+
+  int _ttl;   // Time to live (iterations)
+  int _color;   // Color (RGB)
+  
+  final static int _particleSize = 2;   // Size (pixels)
+  final static int _casingLength = 25;   // Length (pixels)
+
+  Particle(ParticleType type, PVector s, PVector v, float m, int ttl, int c) 
+  {
+    _type = type;
+    
+    _s = s.copy();
+    _v = v.copy();
+    _m = m;
+
+    _a = new PVector(0.0f ,0.0f, 0.0f);
+    _F = new PVector(0.0f, 0.0f, 0.0f);
+   
+    _ttl = ttl;
+    _color = c;
+  }
+
+   public void run() 
+  {
+    update();
+    display();
+  }
+
+   public void update() 
+  {
+    if (isDead())
+      return;
+      
+    updateForce();
+   
+    // Codigo con la implementación de las ecuaciones diferenciales para actualizar el movimiento de la partícula
+    PVector a = _F.copy();
+    a.div(_m);
+    
+    // la gravedad no esta afectando
+    _v.add(PVector.mult(a, SIM_STEP));
+    _s.add(PVector.mult(_v, SIM_STEP));
+
+    _ttl--;
+  }
+  
+   public void updateForce()
+  {
+    // Código para calcular la fuerza que actua sobre la partícula
+    _F = PVector.mult(G, _m);
+    
+    PVector x = _windVelocity.copy();
+    x.normalize();
+    
+    PVector y = _v.copy();
+    y.normalize();
+    
+    float k = (x.dot(y)+1)/2;
+    
+    _F.add(PVector.mult(_windVelocity, k));
+    
+    //print(_F + "\n");  
+  }
+  
+   public PVector getPosition()
+  {
+    return _s;
+  }
+
+   public void display() 
+  {
+    
+    // Codigo para dibujar la partícula. Se debe dibujar de forma diferente según si es la carcasa o una partícula normal
+    if (_type == ParticleType.values()[0])
+    {
+      fill(_color);
+      ellipse(_s.x, _s.y, _casingLength, _casingLength);
+    }
+    else 
+    {
+      fill(_color, _ttl*10);
+      ellipse(_s.x, _s.y, _casingLength/2, _casingLength/2);
+    }
+  }
+  
+   public boolean isDead() 
+  {
+    if (_ttl < 0.0f) 
+      return true;
+    else
+      return false;
+  }
+}
+public class Rocket 
+{
+  RocketType _type;
+
+  Particle _casing;
+  ArrayList<Particle> _particles;
+  
+  PVector _launchPoint;
+  PVector _launchVel;  
+  PVector _explosionPoint;
+  
+  int _color;
+  boolean _hasExploded;
+
+  Rocket(RocketType type, PVector pos, PVector vel, int c) 
+  {
+    _type = type;
+    _particles = new ArrayList<Particle>();
+    
+    _launchPoint = pos.copy();
+    _launchVel = vel.copy();
+    _explosionPoint = new PVector(0.0f, 0.0f, 0.0f);
+    
+    _color = c;
+    _hasExploded = false;
+    
+    createCasing();
+    _numParticles++;
+  }
+  
+   public void createCasing()
+  {
+    // Codigo para crear la carcasa
+    _casing = new Particle(ParticleType.values()[0], _launchPoint, _launchVel, 10, 40, _color);
+  }
+  
+   public PVector createVelocityRand(float ang, float k, int m, int n){
+    float vel = (cos(((2*asin(k))+(PI*m))/(2*n)))/(cos(((2*asin(k*cos(n*ang)))+(PI*m))/(2*n)));
+    PVector v = new PVector(cos(ang), sin(ang));
+    v.setMag(vel*50);
+    return v;
+  }
+  
+   public void explosion() 
+  {
+    // Codigo para utilizar el vector de partículas, creando particulas en él con diferentes velocidades para recrear distintos tipos de palmeras
+    PVector vel = new PVector();
+    float k = random(0,1);
+    int m = (int)random(1,4);
+    int n = (int)random(5,8);
+    
+    for (float ang = 0; ang <= 2*PI; ang += (2*PI)/50)
+    {
+      if (_type == RocketType.values()[0]){
+        vel = createVelocityRand(ang, k, m, n);
+      } else {
+        vel = new PVector((cos(ang)+sin(ang*10))*100, (sin(ang)+sin(ang*5))*100);
+      }
+      
+      _particles.add(new Particle(ParticleType.values()[1], _explosionPoint, vel, 1, 30, _color));
+      _numParticles++;  
+    }
+    
+    
+  }
+
+   public void run() 
+  {
+    // Codigo con la lógica de funcionamiento del cohete. En principio no hay que modificarlo.
+    // Si la carcasa no ha explotado, se simula su ascenso.
+    // Si la carcasa ha explotado, se genera su explosión y se simulan después las partículas creadas.
+    // Cuando una partícula agota su tiempo de vida, es eliminada.
+    
+    if (!_casing.isDead())
+      _casing.run();
+    else if (_casing.isDead() && !_hasExploded)
+    {
+      _numParticles--;
+      _hasExploded = true;
+
+      _explosionPoint = _casing.getPosition().copy();
+      explosion();
+    }
+    else
+    {
+      for (int i = _particles.size() - 1; i >= 0; i--) 
+      {
+        Particle p = _particles.get(i);
+        p.run();
+        
+        if (p.isDead()) 
+        {
+          _numParticles--;
+          _particles.remove(i);
+        }
+      }
+    }
+  }
 }
 
 

@@ -18,7 +18,7 @@ PrintWriter _output;
 // Display values:
 
 final boolean FULL_SCREEN = false;
-final int DRAW_FREQ = 50;   // Draw frequency (Hz or Frame-per-second)
+final int DRAW_FREQ = 400;   // Draw frequency (Hz or Frame-per-second)
 int DISPLAY_SIZE_X = 1000;   // Display width (pixels)
 int DISPLAY_SIZE_Y = 1000;   // Display height (pixels)
 final int BACKGROUND_COLOR = 50;
@@ -35,7 +35,7 @@ Boolean gravedad;
 
 final int R_bolas = 10;
 final float M_bolas = 1;
-int N_bolas = 100;
+int N_bolas = 500;
 
 int target = -1;
 PVector targetVel = new PVector(0,0);
@@ -54,6 +54,7 @@ void settings()
 
 void setup()
 {
+  frameRate(40000);
   _output = createWriter("data.csv");
   _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
   initSimulation();
