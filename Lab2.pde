@@ -62,7 +62,7 @@ void setup()
   _numParticles = 0;
 
   _output = createWriter("data.csv");
-  _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
+  _output.println("tiempo,paso,n_part");
 }
 
 void printInfo()
@@ -122,7 +122,7 @@ void printFile(){
   //tiempo _elapsedTime
   //numero de particulas
   //deltaTimeDraw
-  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + "," + _numParticles);
+  _output.println(_elapsedTime + "," +_deltaTimeDraw + "," + _numParticles);
 }
 
 void keyPressed()
