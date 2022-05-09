@@ -1,102 +1,78 @@
+static int _lastParticleId = 0;
+
 public class Particle 
 {
-  ParticleType _type;
-
+  int _id;    // Unique id for each particle
+  
   PVector _s;   // Position (m)
   PVector _v;   // Velocity (m/s)
   PVector _a;   // Acceleration (m/(s*s))
   PVector _F;   // Force (N)
-  float _m;   // Mass (kg)
+  float _m;     // Mass (kg)
+  boolean _clamped;   // If true, the particle will not move
 
-  int _ttl;   // Time to live (iterations)
-  color _color;   // Color (RGB)
-  
-  final static int _particleSize = 2;   // Size (pixels)
-  final static int _casingLength = 25;   // Length (pixels)
 
-  Particle(ParticleType type, PVector s, PVector v, float m, int ttl, color c) 
+  Particle(PVector s, PVector v, float m, boolean clamped) 
   {
-    _type = type;
+    _id = _lastParticleId++;
     
     _s = s.copy();
     _v = v.copy();
     _m = m;
-
-    _a = new PVector(0.0 ,0.0, 0.0);
-    _F = new PVector(0.0, 0.0, 0.0);
-   
-    _ttl = ttl;
-    _color = c;
-  }
-
-  void run() 
-  {
-    update();
-    display();
-  }
-
-  void update() 
-  {
-    if (isDead())
-      return;
-      
-    updateForce();
-   
-    // Codigo con la implementación de las ecuaciones diferenciales para actualizar el movimiento de la partícula
-    PVector a = _F.copy();
-    a.div(_m);
+    _clamped = clamped;
     
-    // la gravedad no esta afectando
-    _v.add(PVector.mult(a, SIM_STEP));
-    _s.add(PVector.mult(_v, SIM_STEP));
+    _a = new PVector(0.0, 0.0, 0.0);
+    _F = new PVector(0.0, 0.0, 0.0);
+  }
 
-    _ttl--;
+  void update(float simStep) 
+  {
+    if (_clamped)
+      return;
+
+    updateForce();
+
+    // Simplectic Euler:
+    // v(t+h) = v(t) + h*a(s(t),v(t))
+    // s(t+h) = s(t) + h*v(t+h)
+
+    _a = PVector.div(_F, _m);
+    _v.add(PVector.mult(_a, simStep));  
+    _s.add(PVector.mult(_v, simStep));  
+
+    _F.set(0.0, 0.0, 0.0);
   }
   
-  void updateForce()
+  int getId()
   {
-    // Código para calcular la fuerza que actua sobre la partícula
-    _F = PVector.mult(G, _m);
-    
-    PVector x = _windVelocity.copy();
-    x.normalize();
-    
-    PVector y = _v.copy();
-    y.normalize();
-    
-    float k = (x.dot(y)+1)/2;
-    
-    _F.add(PVector.mult(_windVelocity, k));
-    
-    //print(_F + "\n");  
+    return _id;
   }
   
   PVector getPosition()
   {
     return _s;
   }
-
-  void display() 
+  
+  void setPosition(PVector s)
   {
-    
-    // Codigo para dibujar la partícula. Se debe dibujar de forma diferente según si es la carcasa o una partícula normal
-    if (_type == ParticleType.values()[0])
-    {
-      fill(_color);
-      ellipse(_s.x, _s.y, _casingLength, _casingLength);
-    }
-    else 
-    {
-      fill(_color, _ttl*10);
-      ellipse(_s.x, _s.y, _casingLength/2, _casingLength/2);
-    }
+    _s = s.copy();
+    _a.set(0.0,0.0,0.0);
+    _F.set(0.0,0.0,0.0);
   }
   
-  boolean isDead() 
+  void setVelocity(PVector v)
   {
-    if (_ttl < 0.0) 
-      return true;
-    else
-      return false;
+    _v = v.copy();
+  }
+
+  void updateForce()
+  {
+    PVector weigthForce = PVector.mult(G, _m);
+    _F.add(weigthForce);
+  }
+  
+  void addExternalForce(PVector F)
+  {
+    _F.add(F);
   }
 }

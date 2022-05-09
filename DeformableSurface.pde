@@ -166,8 +166,8 @@ public class DeformableSurface
          if (_nodes[j][i].getPosition().dist(_ball.getPosition()) < _ball.getRadius())
          {
            if (!_springsCollision.containsKey(_nodes[j][i].getId()+";")){
-             //_springsCollision.put(_nodes[j][i].getId()+";", new DampedSpring(_ball, _nodes[j][i], Ke, Kd, true, maxForce, breakLengthFactor));
-              print("se crea muelle");
+             _springsCollision.put(_nodes[j][i].getId()+";", new DampedSpring(_ball, _nodes[j][i], Ke, Kd, true, maxForce, breakLengthFactor));
+              // print("se crea muelle");
            }
          }
          else {
