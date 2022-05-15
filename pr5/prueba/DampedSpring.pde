@@ -88,10 +88,9 @@ public class DampedSpring
     // calcular la fuerza de repulsion
     
     _F.add(PVector.mult(PVector.mult(_eN.copy(), _l-_lr), _Ke));
-    _F.add(PVector.mult(PVector.mult(_eN.copy(), _v), _Kd));
+    //_F.add(PVector.mult(PVector.mult(_eN.copy(), _v), _Kd));
     
     // comprobar que la distancia no es mayor que la distancia o la fuerza es mayor que la permitida
-    if ((_l > _lMax || _F.mag() > _FMax) && !NET_IS_UNBREAKABLE && !_repulsionOnly) breakIt();
     // print("_l: " + _l + " _lMax: " + _lMax + " _F.mag(): " + _F.mag() + " _FMax: " + _FMax+"\n");
   }
 

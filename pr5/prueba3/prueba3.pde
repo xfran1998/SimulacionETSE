@@ -1,8 +1,13 @@
  //<>//
 import peasy.*;
 
-final int MAP_CELLS = 150;
+final int MAP_CELLS = 90;
 final float MAP_CELL_SIZE = 10;
+
+final float max = (MAP_CELLS * MAP_CELL_SIZE)/2;
+
+final PVector rendija1 = new PVector(-max+200,0,(int)MAP_CELLS/2);
+final PVector rendija2 = new PVector(max-200,0,(int)MAP_CELLS/2);
 
 // DISPLAY STUFF
 final boolean FULL_SCREEN = false;
@@ -17,6 +22,7 @@ final float FAR = 100000.0;   // Camera far distance (m)
 final color BACKGROUND_COLOR = color(220, 240, 220);   // Background color (RGB)
 
 PeasyCam _camera;   // mouse-driven 3D camera
+PImage img;
 
 // Time control:
 
@@ -24,8 +30,11 @@ int _lastTimeDraw = 0;   // Last measure of time in draw() function (ms)
 float _deltaTimeDraw = 0.0;   // Time between draw() calls (s)
 float _simTime = 0.0;   // Simulated time (s)
 float _elapsedTime = 0.0;   // Elapsed (real) time (s)
+float SIM_STEP = 0.01;
 
 HeightMap _mapa;   // Deformable mesh
+
+Boolean w_tex = true;
 
 void initSimulation()
 {
@@ -56,6 +65,7 @@ void setup()
   float aspect = float(DISPLAY_SIZE_X)/float(DISPLAY_SIZE_Y);  
   perspective((FOV*PI)/180, aspect, NEAR, FAR);
   _camera = new PeasyCam(this, 0);
+  img = loadImage("ocean.jpg");
 
   initSimulation();
 }
@@ -67,7 +77,11 @@ void draw(){
   _lastTimeDraw = now;
   
   background(BACKGROUND_COLOR);
-  _mapa.display();
+  
+  if (w_tex)
+    _mapa.displayTextured();
+  else
+    _mapa.display();
   
   _mapa.update();
 }
@@ -76,7 +90,28 @@ void keyPressed()
 {
   if (key == 's')
   {
-    _mapa.addWave(10, 0.5, 10, new PVector(1, 0, 0), 1);
-    print("adios");
+    _mapa.addWave(10, 1, 100, new PVector(random(-1,1), 0, random(-1,1)), 1);
+  }
+  if (key == 'r')
+  {
+    _mapa.addWave(5, 1, 100, new PVector(0, 0, max), 2);
+  }
+  if (key == 'h'){
+    _mapa.addWave(10, 1, 100, new PVector(random(-450,450), 0, random(-450, 450)), 3);
+  }
+  if (key == 'm')
+  {
+    _mapa.reset();
+  }
+  if (key == 't')
+  {
+    w_tex = !w_tex;
+  }
+  if (key == 'l')
+  {
+    _mapa.addWave(10, 1, 100, new PVector(max, 0, max), 2);
+    _mapa.addWave(10, 1, 100, new PVector(max, 0, -max), 2);
+    _mapa.addWave(10, 1, 100, new PVector(-max, 0, max), 2);
+    _mapa.addWave(10, 1, 100, new PVector(-max, 0, -max), 2);
   }
 }

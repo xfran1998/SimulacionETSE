@@ -1,4 +1,4 @@
-// Use PeasyCam for 3D rendering //<>//
+// Use PeasyCam for 3D rendering //<>// //<>//
 import peasy.*;
 
 
@@ -33,20 +33,20 @@ final float NET_NODE_MASS = 0.1;   // Mass of the nodes of the net (kg)
 
 final float NET_KE = 150.0;   // Ellastic constant of the net's springs (N/m) 
 final float NET_KD = 5.0;   // Damping constant of the net's springs (kg/m)
-final float NET_MAX_FORCE = 1000.0;   // Maximum force allowed for the net's springs (N)
-final float NET_BREAK_LENGTH_FACTOR = 15.0;   // Maximum distance factor (measured in number of times the rest length) allowed for the net's springs
+final float NET_MAX_FORCE = 500.0;   // Maximum force allowed for the net's springs (N)
+final float NET_BREAK_LENGTH_FACTOR = 18.0;   // Maximum distance factor (measured in number of times the rest length) allowed for the net's springs
 
 boolean NET_IS_UNBREAKABLE = false;   // True if the net cannot be broken
 SpringLayout NET_SPRING_LAYOUT;   // Current spring layout
 
 final PVector BALL_START_POS = new PVector(0.0, 0.0, -200.0);   // Initial position of the sphere (m)
 PVector BALL_START_VEL = new PVector(0.0, 0.0, -100.0);   // Initial velocity of the sphere (m/s)
-final float BALL_MASS = 10;   // Mass of the sphere (kg)
+final float BALL_MASS = 120;   // Mass of the sphere (kg)
 final float BALL_RADIUS = 50.0;   // Radius of the sphere (m)
 
-final float COLLISION_KE = 150.0;   // Ellastic constant of the collision springs (N/m) 
-final float COLLISION_KD = 5;   // Damping constant of the net's springs (kg/m)
-final float COLLISION_MAX_FORCE = 1500.0;   // Maximum force allowed for the collision springs (N)
+final float COLLISION_KE = 100.0;   // Ellastic constant of the collision springs (N/m) 
+final float COLLISION_KD = 3;   // Damping constant of the net's springs (kg/m)
+final float COLLISION_MAX_FORCE = 500.0;   // Maximum force allowed for the collision springs (N)
 final float COLLISION_BREAK_LENGTH_FACTOR = BALL_RADIUS;   // Maximum distance factor (measured in number of times the rest length) allowed for the collision springs
 
 

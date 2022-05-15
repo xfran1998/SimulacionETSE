@@ -4,6 +4,7 @@ public class HeightMap
   private int _n_rows;
   
   private PVector mapa[][];
+  private PVector initValues[][];
   private float base;
   private PVector textura[][];
   private PVector esquina;
@@ -13,11 +14,12 @@ public class HeightMap
   HeightMap (float tamCell, int n_rows){
     _Cellsize = tamCell;
     _n_rows = n_rows;
-    base = 0;
+    base = 200;
     
     waves = new ArrayList<Wave>();
     
     mapa = new PVector[_n_rows][_n_rows];
+    initValues = new PVector[_n_rows][_n_rows];
     textura = new PVector[_n_rows][_n_rows];
     esquina = new PVector(-(_n_rows*_Cellsize)/2, -(_n_rows*_Cellsize)/2, 0);
     
@@ -27,7 +29,18 @@ public class HeightMap
   void iniciaMapa(){
     for (int i = 0; i < _n_rows; i++){
       for (int j = 0; j < _n_rows; j++){
-        mapa[j][i] = new PVector(esquina.x+j*_Cellsize, esquina.y+i*_Cellsize, base);
+        mapa[j][i] = new PVector(esquina.x+j*_Cellsize, base, esquina.y+i*_Cellsize);
+        initValues[j][i] = new PVector(esquina.x+j*_Cellsize, base, esquina.y+i*_Cellsize);
+        textura[j][i] = new PVector(j*img.width/(float)_n_rows, base, i*img.height/(float)_n_rows);
+      }
+    }
+  }
+
+  void iniciaTextura(){
+    for (int i = 0; i < _n_rows; i++){
+      for (int j = 0; j < _n_rows; j++){
+        
+        
       }
     }
   }
@@ -46,8 +59,26 @@ public class HeightMap
     }
   }
   
+  void displayTextured(){
+    noStroke();
+    for (int i = 0; i < _n_rows-1; i++) {
+      beginShape(QUAD_STRIP);
+      texture(img);
+      for (int j = 0; j < _n_rows; j++) {
+        vertex(mapa[j][i].x, mapa[j][i].y, mapa[j][i].z, textura[j][i].x, textura[j][i].z);
+        vertex(mapa[j][i+1].x, mapa[j][i+1].y, mapa[j][i+1].z, textura[j][i+1].x, textura[j][i].z);
+      }
+      endShape();
+    }
+  }
+  
   void addWave(float a, float T, float L, PVector srcDir, int mode){
-    waves.add(new Wave(a, T, L, srcDir, mode));
+    if (mode == 1)
+      waves.add(new DirectionalWave(a, T, L, srcDir));
+    if (mode == 2)
+      waves.add(new RadialWave(a, T, L, srcDir));
+    if (mode == 3)
+      waves.add(new GerstnerWave(a, T, L, srcDir));
   }
   
   void update (){
@@ -56,14 +87,21 @@ public class HeightMap
     for (int i = 0; i < _n_rows; i++){
       for (int j = 0; j < _n_rows; j++){
         // resetear posiciones
-        mapa[j][i].z = base;
+        mapa[j][i].y = base;
+        mapa[j][i].x = initValues[j][i].x;
+        mapa[j][i].z = initValues[j][i].z;
         
         for (int k = 0; k < waves.size(); k++){
           Wave w = waves.get(k);
-          mapa[j][i] = w.evaluate(time, mapa[j][i]).copy();
-          print("hola");
+          mapa[j][i].x += w.evaluate(time, mapa[j][i]).x;
+          mapa[j][i].y += w.evaluate(time, mapa[j][i]).y;
+          mapa[j][i].z += w.evaluate(time, mapa[j][i]).z;
         }
       }
     }
+  }
+  
+  void reset(){
+    waves.clear();
   }
 }

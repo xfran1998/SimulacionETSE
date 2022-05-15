@@ -77,11 +77,11 @@ public class DeformableSurface
        break;
        
        case STRUCTURAL_AND_BEND:
-       
+         createStructBend(Ke, Kd, maxForce, breakLengthFactor);
        break;
        
        case STRUCTURAL_AND_SHEAR_AND_BEND:
-       
+         createStructShearBend(Ke, Kd, maxForce, breakLengthFactor);
        break;
      }
   }
@@ -134,7 +134,14 @@ public class DeformableSurface
 
   void createBend(float Ke, float Kd, float maxForce, float breakLengthFactor)
   {
-
+    for (int i = 0; i < _numNodesY; i++){
+      for (int j = 0; j < _numNodesX; j++){
+        if (j < _numNodesX-2)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j+2][i], Ke, Kd, false, maxForce, breakLengthFactor));
+        if (i < _numNodesY-2)
+          _springsSurface.add(new DampedSpring(_nodes[j][i], _nodes[j][i+2], Ke, Kd, false, maxForce, breakLengthFactor));
+      }
+    }
   }
 
   void createStructShear(float Ke, float Kd, float maxForce, float breakLengthFactor)
@@ -146,6 +153,13 @@ public class DeformableSurface
   void createStructBend(float Ke, float Kd, float maxForce, float breakLengthFactor)
   {
     createStruct(Ke, Kd, maxForce, breakLengthFactor);
+    createBend(Ke, Kd, maxForce, breakLengthFactor);
+  }
+  
+  void createStructShearBend(float Ke, float Kd, float maxForce, float breakLengthFactor)
+  {
+    createStruct(Ke, Kd, maxForce, breakLengthFactor);
+    createShear(Ke, Kd, maxForce, breakLengthFactor);
     createBend(Ke, Kd, maxForce, breakLengthFactor);
   }
 
@@ -200,7 +214,7 @@ public class DeformableSurface
         if ((_nodes[i][j] != null) && (_nodes[i][j] != null))
         {
           PVector pos1 = _nodes[i][j].getPosition();
-          PVector pos2 = _nodes[i][j].getPosition();
+          PVector pos2 = _nodes[i][j+1].getPosition();
  
           vertex(pos1.x, pos1.y, pos1.z);
           vertex(pos2.x, pos2.y, pos2.z);

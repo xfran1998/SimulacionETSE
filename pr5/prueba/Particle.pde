@@ -39,8 +39,8 @@ public class Particle
 
     _a = PVector.div(_F, _m);
     _v.add(PVector.mult(_a, simStep));  
-    _s.add(PVector.mult(_v, simStep));  
-
+    //_s.add(PVector.mult(_v, simStep));  
+    _s.y += _v.y * simStep;
     _F.set(0.0, 0.0, 0.0);
   }
   
@@ -68,11 +68,8 @@ public class Particle
 
   void updateForce()
   {
-    PVector weigthForce = PVector.mult(G, _m);
-    _F.add(weigthForce);
-    
-    PVector airResistance = PVector.mult(_v, -_k);
-    //_F.add(airResistance);
+    PVector f = PVector.mult(_v, -_k);
+    _F.add(f);
   }
   
   void addExternalForce(PVector F)
