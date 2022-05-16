@@ -40,7 +40,7 @@ public class Particle
     _a = PVector.div(_F, _m);
     _v.add(PVector.mult(_a, simStep));  
     //_s.add(PVector.mult(_v, simStep));  
-    _s.y += _v.y * simStep;
+    _s.y += (_v.y + (_v.x + _v.z)/2) * simStep;
     _F.set(0.0, 0.0, 0.0);
   }
   

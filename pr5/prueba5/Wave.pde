@@ -28,7 +28,7 @@ abstract class Wave
     _phi = T * 2 * PI;
     _Q = PI*a*_K; // Q_media segun el pdf de clase
     _temp = millis()/1000f;
-    ang = asin(L/100); // angulo de difraccion
+    ang = radians(90)-asin(L/1000); // angulo de difraccion
     
     extra = new ArrayList<>();
   }
@@ -71,10 +71,10 @@ class RadialWave extends Wave {
     else{
       if (punto.z < 0)
       {
-        if (r1 && PVector.dist(punto, rendija1) < _D1 && (PVector.angleBetween(PVector.sub(punto, rendija1).normalize(),PVector.sub(rendija2, rendija1).normalize()) > ang || PVector.angleBetween(PVector.sub(punto, rendija1).normalize(),PVector.sub(rendija2, rendija1).normalize()) > -ang))
+        if (r1 && PVector.dist(punto, rendija1) < _D1 && (PVector.angleBetween(PVector.sub(new PVector(punto.x, 0, punto.z), rendija1),PVector.sub(rendija2, rendija1)) > ang && PVector.angleBetween(PVector.sub(new PVector(punto.x, 0, punto.z), rendija1),PVector.sub(rendija2, rendija1)) < PI-ang))
           res.y += _A * sin((2*PI/_L) * (PVector.dist(rendija1, new PVector(punto.x, 0, punto.z)) - _W/_K * (t-_temp1+1.5)));
           
-        if (r2 && PVector.dist(punto, rendija2) < _D2 && (PVector.angleBetween(PVector.sub(punto, rendija2).normalize(),PVector.sub(rendija1, rendija2).normalize()) > ang || PVector.angleBetween(PVector.sub(punto, rendija2).normalize(),PVector.sub(rendija1, rendija2).normalize()) > -ang))
+        if (r2 && PVector.dist(punto, rendija2) < _D2 && (PVector.angleBetween(PVector.sub(new PVector(punto.x, 0, punto.z), rendija2),PVector.sub(rendija1, rendija2)) > ang && PVector.angleBetween(PVector.sub(new PVector(punto.x, 0, punto.z), rendija2),PVector.sub(rendija1, rendija2)) < PI-ang))
           res.y += _A * sin((2*PI/_L) * (PVector.dist(rendija2, new PVector(punto.x, 0, punto.z)) - _W/_K * (t-_temp2+1.5)));
       }
     }
