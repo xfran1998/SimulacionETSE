@@ -15,6 +15,7 @@ enum ParticleType
 
 FireWorks _fw;   // Main object of the program
 int _numParticles = 0;   // Number of particles of the simulation
+final int N_ROCKETS = 50;
 
 // Problem variables:
 
@@ -66,12 +67,14 @@ void setup()
 }
 
 void printInfo()
-{
+{ 
   fill(255);
   text("Number of particles : " + _numParticles, width*0.025, height*0.05);
   text("Frame rate = " + 1.0/_deltaTimeDraw + " fps", width*0.025, height*0.075);
   text("Elapsed time = " + _elapsedTime + " s", width*0.025 , height*0.1);
   text("Simulated time = " + _simTime + " s ", width*0.025, height*0.125);
+  text("Manten 'flecha arriba' y mueve el raton para cambiar la direccion y fuerza del viento", width*0.025, height*0.15);
+  text("Pulsa 'TAB' para lanzar " + N_ROCKETS + " particulas", width*0.525, height*0.15);
 }
 
 void drawWind()
@@ -99,6 +102,8 @@ void draw()
   //background(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]);
   fill(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], 50);
   rect(0, 0, width, height);
+  fill(0);
+  rect(0,0, width, height*0.15);
   
   _fw.run();
   printInfo();  
@@ -130,8 +135,8 @@ void keyPressed()
   if (keyCode == UP) {
     windMoving = true;
   } 
-  if (keyCode == BACKSPACE) {
-    for (int i = 0; i < 50; i++) {
+  if (keyCode == TAB) {
+    for (int i = 0; i < N_ROCKETS; i++) {
       PVector pos = new PVector(mouseX+random(0,200), mouseY+random(0,200));
       PVector vel = new PVector((pos.x - width/2), (pos.y - height)).setMag(200);
       color c = color(random(255),random(255),random(255));

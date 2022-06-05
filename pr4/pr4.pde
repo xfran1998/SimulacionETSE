@@ -1,4 +1,4 @@
-// Use PeasyCam for 3D rendering //<>// //<>//
+// Use PeasyCam for 3D rendering //<>// //<>// //<>//
 import peasy.*;
 
 
@@ -50,6 +50,8 @@ final float COLLISION_MAX_FORCE = 500.0;   // Maximum force allowed for the coll
 final float COLLISION_BREAK_LENGTH_FACTOR = BALL_RADIUS;   // Maximum distance factor (measured in number of times the rest length) allowed for the collision springs
 
 
+PrintWriter _output;
+
 // Display stuff:
 
 final boolean FULL_SCREEN = false;
@@ -91,6 +93,9 @@ void initSimulation(SpringLayout springLayout)
 
   _net = new DeformableSurface(NET_LENGTH_X, NET_LENGTH_Y, NET_NUMBER_OF_NODES_X, NET_NUMBER_OF_NODES_Y, NET_POS_Z, NET_NODE_MASS, NET_KE, NET_KD, NET_MAX_FORCE, NET_BREAK_LENGTH_FACTOR, NET_SPRING_LAYOUT, NET_IS_UNBREAKABLE, NET_COLOR);
   _ball = new Ball(BALL_START_POS, BALL_START_VEL, BALL_MASS, BALL_RADIUS, BALL_COLOR);
+
+  _output = createWriter("normal.csv");
+  _output.println("elapsed_time,fps,tipo");
 }
 
 void resetBall()
@@ -153,6 +158,10 @@ void printInfo()
       text("Net is unbreakable", width*0.025, height*0.175);
     else   
       text("Net is breakable", width*0.025, height*0.175);
+      
+    text("Botones del 1 al 5 para cambiar tipo de malla", width*0.5, height*0.05);
+    text("b - hacer irromplible/rompible la malla", width*0.5, height*0.075);
+    text("flechas arriba/abajo - subir/bajar la velocidad inicial", width*0.5, height*0.1);
   }
   popMatrix();
 }
@@ -184,6 +193,7 @@ void draw()
   _deltaTimeDraw = (now - _lastTimeDraw)/1000.0;
   _elapsedTime += _deltaTimeDraw;
   _lastTimeDraw = now;
+  
 
   //println("\nDraw step = " + _deltaTimeDraw + " s - " + 1.0/_deltaTimeDraw + " Hz");
 
@@ -212,7 +222,8 @@ void draw()
   } 
   else
     updateSimulation();
-
+  
+  _output.println(_elapsedTime + "," + 1.0/_deltaTimeDraw + "," + NET_SPRING_LAYOUT);
   printInfo();
 }
 
@@ -250,4 +261,11 @@ void keyPressed()
   
   if (key == 'I' || key == 'i')
     initSimulation(NET_SPRING_LAYOUT);
+
+  if (key == 'F' || key == 'f')
+  {
+    _output.flush(); // Writes the remaining data to the file 
+    _output.close(); // Finishes the file 
+    exit(); // Stops the program 
+  }
 }

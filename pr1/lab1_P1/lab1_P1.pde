@@ -155,6 +155,12 @@ void drawStaticEnvironment()
   text("Integrator = " + _integrator, width*0.025, height*0.1);
   text("Energy = " + _energy + " J", width*0.025, height*0.125);
   
+  text("pulsa 'p' para quitar/restaurar el plano", width*0.025, height*0.15);
+  text("pulsa 'r' para reiniciar la simulacion", width*0.025, height*0.175);
+  text("pulsa '+' para aumentar el sim_step", width*0.025, height*0.200);
+  text("pulsa '-' para disminuir el sim_step", width*0.025, height*0.225);
+  text("pulsa 'flecha arriba/abajo' para cambiar de integrador", width*0.025, height*0.250);
+  
   fill(REFERENCE_COLOR[0], REFERENCE_COLOR[1], REFERENCE_COLOR[2]);
   strokeWeight(1);
 

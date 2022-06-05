@@ -16,6 +16,7 @@ enum EstructuraDatos
 EstructuraDatos type = EstructuraDatos.NONE;
 
 PrintWriter _output;
+Boolean MUESTRA = false;
 
 // Grid
 Grid grid;
@@ -166,7 +167,7 @@ void drawInfo(){
   // 2-LIQUID
   text("2 - LIQUID", init_width2, init_height+padding*1);
   // 3-SOLID
-  text("3 - SOLID", init_width2, init_height+padding*2);
+  text("3 - VISCOUS", init_width2, init_height+padding*2);
 
   // Quitar/Poner plano (p)
   text("p - Quitar/Poner plano", init_width2, init_height+padding*3);
@@ -178,6 +179,8 @@ void drawInfo(){
   text("h - Display Hash", init_width2, init_height+padding*6);
   // Añadir particula (Click)
   text("Click - Añadir particula", init_width2, init_height+padding*7);
+  
+  text("m - mostrar/ocultar lineas grid", init_width2, init_height+padding*8);
 }
 
 void printInfo(){
@@ -248,6 +251,9 @@ void keyPressed()
   }
   if (key == 'h') {
     type = EstructuraDatos.HASH;
+  }
+  if (key == 'm') {
+    MUESTRA = !MUESTRA;
   }
 
   // Cambiar comportamiento particulas

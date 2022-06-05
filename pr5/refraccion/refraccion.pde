@@ -8,6 +8,9 @@ final float max = (MAP_CELLS * MAP_CELL_SIZE)/2;
 
 final PVector rendija1 = new PVector(-max+200,0,(int)MAP_CELLS/2);
 final PVector rendija2 = new PVector(max-200,0,(int)MAP_CELLS/2);
+// a 100 el tamaño de la reja sera el mismo que el de la longitud de onda y sera una refraccion total
+// si la reja es menor la onda no podra pasar
+final float _TAM_REJA = 100;
 
 // DISPLAY STUFF
 final boolean FULL_SCREEN = false;
@@ -34,7 +37,7 @@ float SIM_STEP = 0.01;
 
 HeightMap _mapa;   // Deformable mesh
 
-Boolean w_tex = true;
+Boolean w_tex = false;
 
 void initSimulation()
 {
@@ -84,6 +87,26 @@ void draw(){
     _mapa.display();
   
   _mapa.update();
+  printInfo();
+}
+
+void printInfo()
+{
+  pushMatrix();
+  {
+    camera();
+    fill(0);
+    textSize(20);
+    
+    text("r - añadir onda radial", width*0.025, height*0.05);
+    text("d - añadir onda direccional", width*0.025, height*0.075);
+    text("h - añadir onda de Gerstner", width*0.025, height*0.1);
+    text("m - resetear ondas", width*0.025, height*0.125);
+    text("t - poner/quitar textura", width*0.025, height*0.15);
+    text("refraccion de las ondas radiales, cuando la reja y la longitud de onda son iguales la refraccion es total", width*0.025, height*0.2);
+    text("con refraccion total se simula el efecto de doble rendija", width*0.025, height*0.225);
+  }
+  popMatrix();
 }
 
 void keyPressed()

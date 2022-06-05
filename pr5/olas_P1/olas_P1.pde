@@ -79,6 +79,24 @@ void draw(){
     _mapa.display();
   
   _mapa.update();
+  printInfo();
+}
+
+void printInfo()
+{
+  pushMatrix();
+  {
+    camera();
+    fill(0);
+    textSize(20);
+    
+    text("r - añadir onda radial", width*0.025, height*0.05);
+    text("d - añadir onda direccional", width*0.025, height*0.075);
+    text("h - añadir onda de Gerstner", width*0.025, height*0.1);
+    text("m - resetear ondas", width*0.025, height*0.125);
+    text("t - poner/quitar textura", width*0.025, height*0.15);
+  }
+  popMatrix();
 }
 
 void keyPressed()

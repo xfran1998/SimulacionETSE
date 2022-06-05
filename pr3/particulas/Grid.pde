@@ -91,13 +91,15 @@ class Grid
 
   void display()
   {
-    strokeWeight(1);
-    stroke(250);
-    
-    for(int i = 0; i < _nRows; i++)
-    {
-      line(0, i*_cellSize, width, i*_cellSize); // lineas horizontales
-      line(i*_cellSize, 0, i*_cellSize, height); // lineas verticales
+    if (MUESTRA){
+      strokeWeight(1);
+      stroke(250);
+      
+      for(int i = 0; i < _nRows; i++)
+      {
+        line(0, i*_cellSize, width, i*_cellSize); // lineas horizontales
+        line(i*_cellSize, 0, i*_cellSize, height); // lineas verticales
+      }
     }
   }
 }

@@ -10,11 +10,9 @@ abstract class Wave
   float _phi;
   float _Q;
   ArrayList<PVector> onda;
-  float _D;
+  float _D, _D_menor;
   float _temp;
   ArrayList<Wave> extra;
-  
-  Boolean r1 = false, r2 = false;
   
   Wave (float a, float T, float L, PVector srcDir){
     _C = L/T;
@@ -54,51 +52,28 @@ class DirectionalWave extends Wave {
 class RadialWave extends Wave {
   public RadialWave(float a, float T, float L, PVector srcDir){
     super(a, T, L, srcDir);
+    
+    // cada onda radial generada generara 4 ondas reflejo si la amplitud de estas no es menor que 1
+    if (_A > 1){
+      _mapa.addWave(_A/2, 1, 100, new PVector(_srcDir.x+(max-_srcDir.x)*2, 0, _srcDir.z), 2);
+      _mapa.addWave(_A/2, 1, 100, new PVector(_srcDir.x+(-max-_srcDir.x)*2, 0, _srcDir.z), 2);
+      _mapa.addWave(_A/2, 1, 100, new PVector(_srcDir.x, 0, _srcDir.z+(max-_srcDir.z)*2), 2);
+      _mapa.addWave(_A/2, 1, 100, new PVector(_srcDir.x, 0, _srcDir.z+(-max-_srcDir.z)*2), 2);
+    }
   }
   
   PVector evaluate(float t, PVector punto){
     _D = (((t-_temp)+2) * _W/_K);
+    _D_menor = (((t-_temp)+2-_T) * _W/_K);
     
     PVector res = new PVector (punto.x, punto.y, punto.z);
+    _A -= 0.000001*SIM_STEP;
       
-    if (PVector.dist(punto, _srcDir) < _D && punto.z > 0){
+    if (PVector.dist(punto, _srcDir) < _D && PVector.dist(punto, _srcDir) > _D_menor && _A > 0){
       res.y = _A * sin((2*PI/_L) * (PVector.dist(_srcDir, new PVector(punto.x, 0, punto.z)) - _W/_K * (t-_temp+2)));
     }
     else
       res.y = 0;
-    
-    if (_D > PVector.dist(rendija1, _srcDir) && !r1){
-      _mapa.addWave(_A/2, 1, 100, rendija1, 4);
-      r1 = true;
-    }
-    
-    if (_D > PVector.dist(rendija1, _srcDir) && !r2){
-      _mapa.addWave(_A/2, 1, 100, rendija2, 4);
-      r2 = true;
-    }
-    
-    res.x = 0;
-    res.z = 0;
-    return res;
-  }
-}
-
-class RendijaWave extends Wave {
-  public RendijaWave(float a, float T, float L, PVector srcDir){
-    super(a, T, L, srcDir);
-  }
-  
-  PVector evaluate(float t, PVector punto){
-    _D = (((t-_temp+1.5)) * _W/_K);
-    
-    PVector res = new PVector (punto.x, punto.y, punto.z);
-      
-    if (PVector.dist(punto, _srcDir) < _D && punto.z < 0){
-      res.y = _A * sin((2*PI/_L) * (PVector.dist(_srcDir, new PVector(punto.x, 0, punto.z)) - _W/_K * (t-_temp+1.5)));
-    }
-    else
-      res.y = 0;
-    
     res.x = 0;
     res.z = 0;
     return res;

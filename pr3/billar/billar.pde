@@ -35,7 +35,7 @@ Boolean gravedad;
 
 final int R_bolas = 10;
 final float M_bolas = 1;
-int N_bolas = 500;
+int N_bolas = 5;
 
 int target = -1;
 PVector targetVel = new PVector(0,0);
@@ -54,7 +54,7 @@ void settings()
 
 void setup()
 {
-  frameRate(40000);
+  frameRate(60);
   _output = createWriter("data.csv");
   _output.println("tiempo,paso,framerate,n_part,tiemposindraw,tiempocondraw");
   initSimulation();
@@ -109,7 +109,7 @@ void drawInfo(){
   float padding = 40;
   float init_height = height * 0.8;
   float init_width = width * 0.035;
-  float init_width2 = width * 0.7;
+  float init_width2 = width * 0.7 -200;
   // info por pantalla
   // fps
   textSize(20);
@@ -133,9 +133,13 @@ void drawInfo(){
   // Velocidades aleatorias para las particulas
   text("m - Velocidades aleatorias", init_width2, init_height+padding*0);
   // Alterar las coliisiones de las particulas
-  text("c - Alternar colisiones", init_width2, init_height+padding*1);
+  text("c - Activar/Desactivar colisiones  " + _computeParticleCollisions, init_width2, init_height+padding*1);
   // Reiniciar la simulacion
   text("r - Resetear simulacion", init_width2, init_height+padding*2);
+  
+  text("g - Activar/Desactivar gravedad forzosa  " + gravedad, init_width2, init_height+padding*3);
+  
+  text("pulsa sobre una bola y luego arrastra para preparar el tiro, pulsa de nuevo para lanzar" + gravedad, init_width, 100);
 }
 
 void printInfo(){

@@ -135,6 +135,15 @@ void drawStaticEnvironment()
   text("Integrator = " + _integrator, width*0.025, height*0.1);
   text("Energy = " + _energy + " J", width*0.025, height*0.125);
   
+  text("pulsa '+' para aumentar el sim_step", width*0.025, height*0.200);
+  text("pulsa '-' para disminuir el sim_step", width*0.025, height*0.225);
+  text("pulsa 'flecha arriba/abajo' para cambiar de integrador", width*0.025, height*0.250);
+  text("pulsa 'r' para reiniciar la simulacion", width*0.025, height*0.275);
+  text("pulsa 'w' para aumentar el angulo", width*0.025, height*0.15);
+  text("pulsa 's' para disminuir el angulo", width*0.525, height*0.15);
+  text("pulsa 'a' para aumentar la fuerza", width*0.025, height*0.175);
+  text("pulsa 'd' para disminuir la fuerza", width*0.525, height*0.175);
+  
   fill(REFERENCE_COLOR[0], REFERENCE_COLOR[1], REFERENCE_COLOR[2]);
   strokeWeight(1);
 
@@ -493,6 +502,9 @@ void keyPressed()
       int index = _integrator.ordinal() + 1;
       index %= _integrator.values().length;
       _integrator = _integrator.values()[index];
+      
+      if (_integrator == _integrator.values()[1])
+        initSimulation();
     }
     if (keyCode == DOWN) {
       int index = _integrator.ordinal() - 1;
@@ -500,6 +512,9 @@ void keyPressed()
       // If index is negative, we need to go to the last element with ternary operator
       index = (index < 0) ? _integrator.values().length - 1 : index;
       _integrator = _integrator.values()[index];
+      
+      if (_integrator == _integrator.values()[5])
+        initSimulation();
     }
   }
 }
